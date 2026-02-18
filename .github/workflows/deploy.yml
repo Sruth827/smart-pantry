@@ -18,13 +18,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/smart-pantry-app
-            if [ ! -d ".git" ]; then
-              git clone https://github.com/${{ github.repository }}.git .
-            else 
-              git pull origin main
-            fi
-
+            cd ~/smart-pantry-app 
+            git pull origin main
+        
+            npx prisma generate
             npm install 
             npm run build
 
