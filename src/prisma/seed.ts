@@ -1,17 +1,7 @@
-import { PrismaClient, Prisma } from "../generated/prisma";
+import { PrismaClient } from "../generated/prisma";
 import bcrypt from "bcrypt";
 
-// 2. Pass the internal dmmf (Data Model Meta Format) to the constructor
-const prisma = new PrismaClient({
-    __internal: {
-        // @ts-ignore - This tells the client exactly what our database looks like
-        configOverride: (config) => ({
-            ...config,
-            runtimeDataModel: Prisma.dmmf.datamodel,
-        }),
-    },
-} as any);
-
+const prisma = new PrismaClient();
 
 async function main() {
     console.log("Connecting to:", process.env.DATABASE_URL);
