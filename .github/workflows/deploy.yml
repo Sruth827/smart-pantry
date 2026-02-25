@@ -1,16 +1,48 @@
-name: Deploy Smart Panty
+name: CI and Deploy Smart Pantry
 
 on:
   push:
     branches: [ main ]
 
 jobs:
+  # JOB 1: The Safety Check (CI)
+  test-and-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: pantry_admin
+          POSTGRES_PASSWORD: pantry_admin_pass!
+          POSTGRES_DB: smart_pantry
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+      - run: npm install
+      - run: npx prisma generate
+      - name: Test Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://pantry_admin:pantry_admin_pass!@localhost:5432/smart_pantry?schema=public
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+
+  # JOB 2: The actual Deploy
   deploy:
     runs-on: ubuntu-latest
+    needs: test-and-build # <--- THE MAGIC LINK: This job only runs if Job 1 passes
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -20,9 +52,20 @@ jobs:
           script: |
             cd ~/smart-pantry-app 
             git pull origin main
-        
+            
+            export PRISMA_CLIENT_ENGINE_TYPE='library'
+            npm install
             npx prisma generate
-            npm install 
-            npm run build
+            NODE_OPTIONS='--max-old-space-size=1536' npm run build
 
-            pm2 restart pantry-app || pm2 start npm --name "pantry-app" -- startS
+            # Inline vars ensure PM2 has exactly what it needs
+            NEXTAUTH_URL='https://pantry.s-ruth.dev' \
+            NEXTAUTH_SECRET='${{ secrets.NEXTAUTH_SECRET }}' \
+            DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+            AUTH_TRUST_HOST='true' \
+            pm2 restart smart-pantry || \
+            NEXTAUTH_URL='https://pantry.s-ruth.dev' \
+            NEXTAUTH_SECRET='${{ secrets.NEXTAUTH_SECRET }}' \
+            DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+            AUTH_TRUST_HOST='true' \
+            pm2 start npm --name "smart-pantry" -- start

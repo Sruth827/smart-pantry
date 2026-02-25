@@ -1,16 +1,17 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { db } from "@/lib/db";
+import { db } from "./db";
 import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(db),
+    // Standard adapter initialization for Prisma 5
+    adapter: PrismaAdapter(db), 
     session: {
         strategy: "jwt",
     },
     pages: {
-        signIn: "/login", // We'll create this page next
+        signIn: "/login",
     },
     providers: [
         CredentialsProvider({
@@ -19,21 +20,38 @@ export const authOptions: NextAuthOptions = {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" }
             },
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
+	    async authorize(credentials) {
+    	    	console.log("--- Login Attempt ---");
+       	    	console.log("Credentials received:", credentials?.email);
 
-                const user = await db.user.findUnique({
-                    where: { email: credentials.email }
-                });
+            	if (!credentials?.email || !credentials?.password) {
+        		console.log("Fail: Missing credentials");
+        		return null;
+    	    	}
 
-                // Use bcrypt to compare the hashed password in the DB with the user input
-                if (!user || !user.passwordHash) return null;
-                const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+    	    	const user = await db.user.findUnique({
+        		where: { email: credentials.email }
+            	});
 
-                if (!isValid) return null;
+    	    	if (!user) {
+        		console.log("Fail: User not found in DB");
+        		return null;
+    	    	}
 
-                return { id: user.id, email: user.email, name: user.fullName };
-            }
+    	    	console.log("User found in DB:", user.email);
+            	console.log("Hash in DB exists:", !!user.passwordHash);
+
+            	const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+            	console.log("Bcrypt comparison result:", isValid);
+
+            	if (!isValid) {
+            		console.log("Fail: Password mismatch");
+          		return null;
+    	    	}
+
+    	    	console.log("Success: Authorizing user");
+    	    	return { id: user.id, email: user.email, name: user.fullName };
+	    }
         })
     ],
 };

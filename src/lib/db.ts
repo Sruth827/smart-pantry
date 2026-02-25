@@ -1,11 +1,19 @@
-import { PrismaClient } from "@/generated/prisma";
+import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const prismaClientSingleton = () => {
+  // If we are building, don't even create the class
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return null as unknown as PrismaClient;
+  }
+  return new PrismaClient();
+};
 
-export const db =
-    globalForPrisma.prisma ||
-    new PrismaClient({
-        log: ["query"], // This helps you see what's happening in the console
-    });
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClientSingleton | undefined;
+};
+
+export const db = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;

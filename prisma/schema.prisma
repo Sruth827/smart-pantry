@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env ("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName     String       @map("full_name") @db.VarChar(100)
+  email        String       @unique @db.VarChar(255)
+  passwordHash String       @map("password_hash")
+  unitPref     UnitPref     @default(Metric) @map("unit_pref")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  categories   Category[]
+  pantryItems  PantryItem[]
+
+  @@map("users")
+}
+
+model Category {
+  id     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String       @map("user_id") @db.Uuid
+  name   String       @db.VarChar(50)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items  PantryItem[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+model PantryItem {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  categoryId     String?   @map("category_id") @db.Uuid
+  itemName       String    @map("item_name") @db.VarChar(100)
+  quantity       Decimal   @default(0) @db.Decimal(10, 2)
+  unitLabel      String?   @map("unit_label") @db.VarChar(20)
+  lowThreshold   Decimal   @default(0) @map("low_threshold") @db.Decimal(10, 2)
+  expirationDate DateTime? @map("expiration_date") @db.Date
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  category       Category? @relation(fields: [categoryId], references: [id])
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("pantry_items")
+}
+
+enum UnitPref {
+  Imperial
+  Metric
+}
