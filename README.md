@@ -1,87 +1,87 @@
-# Smart Pantry Manager
-## Capstone Project at National University
+<h1>Smart Pantry Manager</h1>
 
-A full-stack web application designed to track household inventory, manage expiration dates, and reduce food waste.
+Capstone Project | National University
 
----
+A full-stack web application designed to track household inventory, manage expiration dates, and significantly reduce food waste.
 
-## Onboarding Instructions
-Follow these steps to get the development environment running on your local machine.
+🚀 Onboarding Instructions
 
-### 1. Prereqs
-- Node.js (v18 or higher)
-- Git
-- Public IP Whitelisted on Server: Please send your IP address to Sean for database access during development.  (Use [icanhazip.com](https://icanhazip.com))
+Follow these steps to get the development environment running on your local machine in under 5 minutes.
 
-### 2. Installation 
-```bash 
-# clone the repo
-   git clone https://github.com/Sruth827/smart-pantry.git
-   cd smart-pantry
+1. Prerequisites
 
-# install dependencies 
+Node.js: v20 or higher (Matches our VPS and CI/CD environment)
+
+Docker: For running the local database (Recommended)
+
+Git: For version control
+
+2. Quick Start (Local Environment)
+```
+1. Clone the repo
+git clone [https://github.com/Sruth827/smart-pantry.git](https://github.com/Sruth827/smart-pantry.git)
+cd smart-pantry
+
+# 2. Install dependencies (Locked to Prisma 5.22.0)
 npm install
 
-# local environment config
- - create .env in your root directory
- - copy .env.example as a template
- - update DATABASE_URL with password and IP provided in group chat
+# 3. Start the local database
+docker-compose up -d
 
-# initialize prisma
-npx prisma generate
+# 4. Setup your Environment Variables
+# Create a .env file and copy the contents of .env.example as a template
+cp .env.example .env
 
-# Verify database connection
-npx prisma db pull
+# 5. Initialize the database and seed team accounts
+npx prisma db push
+npx prisma db seed
 
-# run it on http://localhost:3000
+# 6. Run the development server
 npm run dev
+
+
+Your app is now running at http://localhost:3000.
 ```
+
+🛠 Tech Stack
 
 ## 🛠 Tech Stack
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Framework** | [Next.js 15+](https://nextjs.org/) | React framework for frontend and server-side rendering. |
-| **Language** | [TypeScript](https://www.typescriptlang.org/) | Type-safe JavaScript to prevent runtime errors. |
-| **Database** | [PostgreSQL](https://www.postgresql.org/) | Relational database for structured pantry data. |
-| **ORM** | [Prisma 7](https://www.prisma.io/) | Object-Relational Mapper to sync code with the database. |
-| **Hosting** | [AWS Lightsail](https://aws.amazon.com/lightsail/) | VPS (Ubuntu) for hosting the app and database containers. |
-| **Process Manager** | [PM2](https://pm2.keymetrics.io/) | Keeps the Node.js application running 24/7 on the server. |
-| **Web Server** | [Caddy](https://caddyserver.com/) | Reverse proxy with automatic SSL (HTTPS) encryption. |
-| **CI/CD** | [GitHub Actions](https://github.com/features/actions) | Automated deployment pipeline on every push to `main`. |
+| **Framework** | Next.js 16.1.6 | React framework for frontend and server-side rendering. |
+| **Language** | TypeScript | Type-safe JavaScript to prevent runtime errors. |
+| **Database** | PostgreSQL 15 | Relational database (Running in Docker locally). |
+| **ORM** | Prisma 5.22.0 | Locked version for stability and VPS compatibility. |
+| **Hosting** | AWS Lightsail | Ubuntu VPS hosting the production app. |
+| **Process Manager** | PM2 | Manages the production Node.js process. |
+| **Reverse Proxy** | Caddy | Automatic SSL/HTTPS management via Reverse Proxy. |
+| **CI/CD** | GitHub Actions | Automated Safety Checks: Every push is tested before deployment. |
 
-## Contribution Guidelines
+🤝 Contribution Guidelines
 
-To maintain code quality and ensure the live site remains stable, all team members must follow this workflow:
+1. The "Green Build" Rule
 
-### 1. The Branching Strategy
-Never work directly on the `main` branch. Always create a descriptive feature branch:
-* `git checkout -b feature/login-page`
-* `git checkout -b bugfix/fix-pantry-icon`
+We use a Unified CI/CD Pipeline. When you push to main:
 
-### 2. Commit Standards
-Write clear, concise commit messages that describe **what** was changed:
-* Good: `feat: added quantity increment buttons to pantry list`
-* Bad: `updated stuff`
+GitHub spins up a fresh database and attempts to build your code.
 
-### 3. Pull Requests (PRs)
-1. Push your branch to GitHub: `git push origin feature/your-feature-name`.
-2. Open a **Pull Request** targeting the `main` branch.
-3. Describe your changes and link any relevant GitHub Issues.
-4. **Required:** At least one peer review/approval is required before merging.
+If it fails: The deployment is blocked. You must fix the errors locally.
 
-### 4. Database Changes
-If you need to change the database structure (the schema):
-1. Discuss the change with the Lead Developer (Sean).
-2. Update the `prisma/schema.prisma` file.
-3. Use `npx prisma db push` to test locally.
+If it passes: Your changes are automatically deployed to pantry.s-ruth.dev.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Branching & PRs
 
-### 🖥️ Useful Commands
-- `npx prisma studio`: Opens a local browser window to view/edit the database data visually.
-- `npm run build`: Tests the production build locally (do this before pushing!).
+Work on feature branches: git checkout -b feature/your-feature
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Never push broken code. Run npm run build locally before pushing to ensure the GitHub Action will pass.
+
+🖥️ Useful Commands
+
+| Command | Description |
+| :--- | :--- |
+| ```npx prisma studio``` | View/edit your local database data in a GUI. |
+| ```npx prisma db seed``` | Reset your local login if you get locked out. |
+| ```docker-compose logs -f db``` | Watch the database logs if you have connection issues. |
 
 
