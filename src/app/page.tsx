@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image'
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -16,9 +17,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center p-6">
-      <h1 className="text-5xl font-extrabold text-green-700 mb-4">ShelfControl</h1>
-      <p className="text-xl text-gray-600 mb-8 max-w-md">
-        The smart pantry manager for your home. Track inventory, get expiry alerts, and simplify your shopping.
+      <div className="relative w-full h-150 mb-2">
+        <Image
+          src="/shelfcontrolimage.png" // Path relative to the public folder
+          alt="ShelfControl Pantry Manager"
+          fill
+          className="object-contain object-center"
+          priority
+        />
+      </div>
+      <p className="text-xl text-gray-600 mb-6 max-w-md">
+        The <strong>smart</strong> pantry manager for your home. Track inventory, get expiry alerts, and simplify your shopping.
       </p>
 
       <div className="flex gap-4">
