@@ -14,8 +14,9 @@ export default function LoginPage() {
         const result = await signIn("credentials", {
             email,
             password,
-	    callbackUrl: "/dashboard",
-            redirect: true,
+            redirect: false,
+            callbackUrl: "/dashboard",
+
         });
 
         if (result?.ok) {
@@ -26,8 +27,8 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
-            <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 rounded-lg bg-white p-8 shadow">
+        <div className="flex min-h-screen items-center justify-center bg-blue">
+            <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 rounded-lg bg-blue p-8 shadow">
                 <h1 className="text-2xl font-bold">Pantry Sign In</h1>
                 <input
                     type="email"
