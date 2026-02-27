@@ -39,8 +39,14 @@ npx prisma db seed
 # 6. Run the development server
 npm run dev
 
+# 7 Run Prisma studio
+(Recommend opening a seperate terminal tab for this command so you can keep studio up during development)
+npx prisma studio
+
+
 
 Your app is now running at http://localhost:3000.
+Your studio is running at http://localhost:5555.
 ```
 
 🛠 Tech Stack
