@@ -25,7 +25,7 @@ cd smart-pantry
 # 2. Install dependencies (Locked to Prisma 5.22.0)
 npm install
 
-# 3. Start the local database
+# 3. Start the local database. Note: ensure Docker Desktop is installed on your PC.
 docker-compose up -d
 
 # 4. Setup your Environment Variables
