@@ -7,9 +7,11 @@ import { useQuery } from '@tanstack/react-query';
 export default function DashboardPage() {
     // session is required: true, so users are kicked out if they aren't logged in
     const { data: session } = useSession({ required: true });
+
     const { data, isLoading, error } = useQuery({
-        queryKey: ['pantry'],
-        queryFn: () => fetch('/api/pantry').then(res => res.json())
+        queryKey: ['pantry', session?.user?.email],
+        queryFn: () => fetch('/api/pantry').then(res => res.json()),
+        enabled: !!session?.user?.email, 
     });
 
     if (isLoading) return <div>Checking the shelves...</div>;

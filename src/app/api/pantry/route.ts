@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const pantryData = await prisma.category.findMany({
+    const session = await getServerSession(authOptions);
+
+    if(!session || !session.user?.email) {
+      return NextResponse.json({ error: 'Unauthorize'}, { status: 401 });
+    }
+
+    const pantryData = await db.category.findMany({
       where: {
-        user: { email: 'sean@test.local' }
+        user: { email: session.user.email }
       },
       include: {
         items: true, 
