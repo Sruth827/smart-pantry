@@ -21,6 +21,7 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
     "@tailwindcss/postcss": "^4",
     "@tanstack/eslint-plugin-query": "^5.91.4",
     "@types/bcrypt": "^6.0.0",
