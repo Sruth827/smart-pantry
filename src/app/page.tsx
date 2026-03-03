@@ -42,6 +42,13 @@ export default function Home() {
         <button className="px-8 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
           Learn More
         </button>
+
+        <Link
+          href="/registration"
+          className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg"
+        >
+          Register Now
+        </Link>
       </div>
     </div>
   );

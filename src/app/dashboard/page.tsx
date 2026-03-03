@@ -11,7 +11,7 @@ export default function DashboardPage() {
     const { data, isLoading, error } = useQuery({
         queryKey: ['pantry', session?.user?.email],
         queryFn: () => fetch('/api/pantry').then(res => res.json()),
-        enabled: !!session?.user?.email, 
+        enabled: status === "authenticated", 
     });
 
     if (isLoading) return <div>Checking the shelves...</div>;
