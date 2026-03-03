@@ -2,11 +2,11 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
-
+export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
     // session is required: true, so users are kicked out if they aren't logged in
-    const { data: session } = useSession({ required: true });
+    const { data: session, status } = useSession({ required: true });
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['pantry', session?.user?.email],
