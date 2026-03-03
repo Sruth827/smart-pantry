@@ -26,6 +26,7 @@ export async function GET() {
 
     return NextResponse.json(pantryData);
   } catch (error) {
+    console.error("API Error:", error);
     return NextResponse.json({ error: 'Failed to fetch pantry' }, { status: 500 });
   }
 }
