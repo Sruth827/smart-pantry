@@ -36,6 +36,7 @@ model PantryItem {
   userId         String    @map("user_id") @db.Uuid
   categoryId     String?   @map("category_id") @db.Uuid
   itemName       String    @map("item_name") @db.VarChar(100)
+  spoonacularId  Int?
   quantity       Decimal   @default(0) @db.Decimal(10, 2)
   unitLabel      String?   @map("unit_label") @db.VarChar(20)
   lowThreshold   Decimal   @default(0) @map("low_threshold") @db.Decimal(10, 2)

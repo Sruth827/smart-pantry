@@ -25,7 +25,7 @@ cd smart-pantry
 # 2. Install dependencies (Locked to Prisma 5.22.0)
 npm install
 
-# 3. Start the local database. Note: ensure Docker Desktop is installed on your PC.
+# 3. Start the local database
 docker-compose up -d
 
 # 4. Setup your Environment Variables
@@ -39,14 +39,8 @@ npx prisma db seed
 # 6. Run the development server
 npm run dev
 
-# 7 Run Prisma studio
-(Recommend opening a seperate terminal tab for this command so you can keep studio up during development)
-npx prisma studio
-
-
 
 Your app is now running at http://localhost:3000.
-Your studio is running at http://localhost:5555.
 ```
 
 🛠 Tech Stack
