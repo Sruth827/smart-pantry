@@ -58,7 +58,7 @@ export default function LoginPage() {
                     justifyContent: "center",
                 }}>
                     <Image
-                        src="/Logo_Name_Bottom.png"
+                        src="/Logo_Bottom.png"
                         alt="PantryMonium"
                         width={200}
                         height={200}
