@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: smart_pantry_db
+    restart: always
+    environment:
+      POSTGRES_USER: pantry_admin
+      POSTGRES_PASSWORD: pantry_admin_pass!
+      POSTGRES_DB: smart_pantry
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
