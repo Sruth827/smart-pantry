@@ -56,7 +56,13 @@ console.log('--- Seeding Categories for all users ---');
 
 const allCategories = await prisma.category.findMany(); 
 
-await prisma.pantryItem.deleteMany({});
+await prisma.pantryItem.deleteMany({
+  where: {
+    user: {
+      email: { in: ['sean@test.local', ...teamEmails] }
+    }
+  }
+});
 
 const foodMap: Record<string, string[]> = {
   'Produce': ['Honey Crisp Apples', 'Baby Spinach', 'Avocados', 'Bananas', 'Kale', 'Blueberries', 'Celery', 'Bell Peppers', 'Oranges'],

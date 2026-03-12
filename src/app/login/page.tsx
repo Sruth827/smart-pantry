@@ -16,20 +16,20 @@ export default function LoginPage() {
             password,
             redirect: false,
             callbackUrl: "/dashboard",
-
         });
 
         if (result?.ok) {
-            router.push("/"); // Send them to the dashboard
+            router.push("/");
         } else {
             alert("Invalid login credentials");
         }
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-blue">
+        <div className="relative flex flex-col min-h-screen items-center justify-center bg-blue">
             <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 rounded-lg bg-blue p-8 shadow">
-                <h1 className="text-2xl font-bold">Pantry Sign In</h1>
+                <img src="/favicon.ico" alt="Logo" className="w-72 h-72 mx-auto mb-4" />
+                <h1 className="text-2xl font-bold text-center">Pantry Sign In</h1>
                 <input
                     type="email"
                     placeholder="Email"
@@ -46,6 +46,7 @@ export default function LoginPage() {
                     Sign In
                 </button>
             </form>
+            <p className="absolute bottom-16 text-x2 text-white">Your Pantry, Perfectly Remembered</p>
         </div>
     );
 }

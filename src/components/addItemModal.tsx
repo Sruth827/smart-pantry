@@ -45,15 +45,15 @@ return (
             {/* Form Body */}
             <form action={formAction} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                <input name="itemName" required className="w-full border rounded-md p-2 focus:ring-2 focus:ring-green-500 outline-none" placeholder="e.g. Whole Milk" />
+                <label className="block text-sm font-medium text-black mb-1">Item Name</label>
+                <input name="itemName" required className="w-full border rounded-md p-2 focus:ring-2 focus:ring-green-500 text-black outline-none" placeholder="e.g. Whole Milk" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Shelf / Category</label>
+                <label className="block text-sm font-medium text-black mb-1">Shelf / Category</label>
                 <select 
                   name="categoryId" 
-                  className="w-full border rounded-md p-2 outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border rounded-md p-2 outline-none focus:ring-2 focus:ring-green-500 text-black"
                 >
                 <option value="">-- No Category --</option>
                   {categories.map((cat) => (
@@ -66,13 +66,18 @@ return (
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                  <input name="quantity" type="number" step="0.1" defaultValue="1" className="w-full border rounded-md p-2" />
+                  <label className="block text-sm font-medium text-black mb-1">Quantity</label>
+                  <input name="quantity" type="number" step="0.1" defaultValue="1" className="w-full border rounded-md p-2 text-black" />
+
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
-                  <input name="unitLabel" placeholder="pcs, oz, gal" className="w-full border rounded-md p-2" />
+                  <label className="block text-sm font-medium text-black mb-1">Unit</label>
+                  <input name="unitLabel" placeholder="pcs, oz, gal" className="w-full border rounded-md p-2 text-black" />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Expiration Date</label>
+                <input type="date" name="expirationDate" className="w-full border rounded-md p-2 text-black" />
               </div>
 
               {state?.error && <p className="text-red-500 text-sm italic">{state.error}</p>}
