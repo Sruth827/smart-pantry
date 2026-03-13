@@ -72,9 +72,15 @@ function ShoppingItem({
           }} />
           <span>{item.categoryName}</span>
           <span style={{ color: "var(--border)" }}>·</span>
-          <span>
-            Has {Number(item.quantity)} {item.unitLabel || "units"} (min: {Number(item.lowThreshold)})
-          </span>
+          {item._isGroup ? (
+            <span>
+              {item._groupCount} instances · {Number(item.quantity).toFixed(Number.isInteger(Number(item.quantity)) ? 0 : 1)} {item.unitLabel || "units"} total (min: {Number(item.lowThreshold)})
+            </span>
+          ) : (
+            <span>
+              Has {Number(item.quantity)} {item.unitLabel || "units"} (min: {Number(item.lowThreshold)})
+            </span>
+          )}
         </div>
       </div>
 
@@ -132,15 +138,51 @@ export default function ShoppingPage() {
     );
   }
 
-  // Collect all low-stock items
+  // Collect low-stock items — groups appear as a single entry, singletons as normal
   const allItems: any[] = [];
   if (Array.isArray(pantryData)) {
+    // Flatten everything first with category info
+    const flat: any[] = [];
     pantryData.forEach((cat: any) => {
       (cat.items || []).forEach((item: any) => {
-        if (Number(item.quantity) <= Number(item.lowThreshold) && Number(item.lowThreshold) > 0) {
-          allItems.push({ ...item, categoryName: cat.name ?? "Uncategorized" });
-        }
+        flat.push({ ...item, categoryName: cat.name ?? "Uncategorized" });
       });
+    });
+
+    // Group by name (case-insensitive)
+    const byName = new Map<string, any[]>();
+    flat.forEach((item) => {
+      const key = item.itemName.toLowerCase().trim();
+      if (!byName.has(key)) byName.set(key, []);
+      byName.get(key)!.push(item);
+    });
+
+    byName.forEach((group) => {
+      const threshold = Number(group.find((i) => Number(i.lowThreshold) > 0)?.lowThreshold ?? 0);
+      if (threshold <= 0) return; // no threshold set — skip
+
+      if (group.length === 1) {
+        // Singleton: add normally if below its own threshold
+        const item = group[0];
+        if (Number(item.quantity) <= threshold) {
+          allItems.push(item);
+        }
+      } else {
+        // Group: compare TOTAL quantity against the shared group threshold
+        const totalQty = group.reduce((s, i) => s + Number(i.quantity), 0);
+        if (totalQty <= threshold) {
+          // Add a single representative entry using the first item's id as key,
+          // but show the combined quantity so the user understands the context
+          const rep = group[0];
+          allItems.push({
+            ...rep,
+            quantity: totalQty,          // display combined qty
+            lowThreshold: threshold,
+            _groupCount: group.length,   // used in the row subtitle
+            _isGroup: true,
+          });
+        }
+      }
     });
   }
 
@@ -203,7 +245,7 @@ export default function ShoppingPage() {
           <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
             {allItems.length === 0
               ? "All stocked up — nothing needs restocking."
-              : `${allItems.length} item${allItems.length !== 1 ? "s" : ""} below restock threshold.`}
+              : `${allItems.length} item${allItems.length !== 1 ? "s" : ""} below restock threshold.${allItems.some((i) => i._isGroup) ? " Grouped items appear as a single entry." : ""}`}
           </p>
         </div>
 

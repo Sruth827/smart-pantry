@@ -25,13 +25,13 @@ function getExpiryBadge(dateStr: string | null) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const exp = parseLocalDate(dateStr);
   const diffDays = Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays < 0)  return { label: "Expired", bgVar: "--alert-expired-bg", colorVar: "--alert-expired-text", borderVar: "--alert-expired-border" };
+  if (diffDays < 0)   return { label: "Expired", bgVar: "--alert-expired-bg", colorVar: "--alert-expired-text", borderVar: "--alert-expired-border" };
   if (diffDays === 0) return { label: "Today",   bgVar: "--alert-soon-bg",    colorVar: "--alert-soon-text",    borderVar: "--alert-soon-border" };
   if (diffDays <= 5)  return { label: `${diffDays}d`, bgVar: "--alert-soon-bg", colorVar: "--alert-soon-text", borderVar: "--alert-soon-border" };
   return null;
 }
 
-// ─── Edit Modal ───────────────────────────────────────────────────────────────
+// --- Edit Modal ---
 
 function EditItemModal({
   item, categories, unitSystem, onClose, onSaved,
@@ -44,9 +44,7 @@ function EditItemModal({
   const [quantity, setQuantity]     = useState(String(Number(item.quantity)));
   const [unitLabel, setUnitLabel]   = useState(item.unitLabel ?? "");
   const [threshold, setThreshold]   = useState(String(Number(item.lowThreshold)));
-  const [expDate, setExpDate]       = useState(
-    item.expirationDate ? item.expirationDate.split("T")[0] : ""
-  );
+  const [expDate, setExpDate]       = useState(item.expirationDate ? item.expirationDate.split("T")[0] : "");
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
 
@@ -84,145 +82,73 @@ function EditItemModal({
     display: "block", fontSize: "12px", fontWeight: 700,
     color: "var(--text-body)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em",
   };
-  const fieldStyle: React.CSSProperties = { marginBottom: "16px" };
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 200,
-        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)",
-        display: "flex", alignItems: "center", justifyContent: "center", padding: "24px",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "var(--card-bg)", borderRadius: "16px", width: "100%", maxWidth: "480px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.35)", overflow: "hidden",
-          animation: "modalIn 0.18s ease", border: "1px solid var(--card-border)",
-        }}
-      >
-        {/* Modal header */}
-        <div style={{
-          padding: "20px 24px 16px", borderBottom: "1px solid var(--border)",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          background: "var(--surface-subtle)",
-        }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--card-bg)", borderRadius: "16px", width: "100%", maxWidth: "480px", boxShadow: "0 20px 60px rgba(0,0,0,0.35)", overflow: "hidden", animation: "modalIn 0.18s ease", border: "1px solid var(--card-border)" }}>
+        <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-subtle)" }}>
           <div>
             <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 800, color: "var(--foreground)" }}>Edit Item</h2>
             <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--text-secondary)" }}>{item.itemName}</p>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none", border: "none", fontSize: "20px", cursor: "pointer",
-              color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px",
-            }}
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--foreground)"; (e.currentTarget as HTMLElement).style.background = "var(--border)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.background = "none"; }}
           >✕</button>
         </div>
-
-        {/* Modal body */}
         <div style={{ padding: "20px 24px 4px" }}>
-          <div style={fieldStyle}>
+          <div style={{ marginBottom: "16px" }}>
             <label style={labelStyle}>Item Name</label>
             <input value={itemName} onChange={(e) => setItemName(e.target.value)} style={inputStyle} placeholder="e.g. Whole Milk" />
           </div>
-          <div style={fieldStyle}>
+          <div style={{ marginBottom: "16px" }}>
             <label style={labelStyle}>Category</label>
             <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
               <option value="">— Uncategorized —</option>
-              {categories.map((cat: any) => (
-                <option key={cat.id} value={cat.id}>{cat.color ? `● ${cat.name}` : cat.name}</option>
-              ))}
+              {categories.map((cat: any) => (<option key={cat.id} value={cat.id}>{cat.color ? "● " + cat.name : cat.name}</option>))}
             </select>
             {categoryId && (() => {
               const selected = categories.find((c: any) => c.id === categoryId);
               return selected?.color ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
                   <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: selected.color, border: "1px solid rgba(0,0,0,0.1)" }} />
-                  <span style={{ fontSize: "12px", color: "var(--text-body)" }}>
-                    {selected.name} — <span style={{ fontFamily: "monospace" }}>{selected.color}</span>
-                  </span>
+                  <span style={{ fontSize: "12px", color: "var(--text-body)" }}>{selected.name}</span>
                 </div>
               ) : null;
             })()}
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-            <div>
-              <label style={labelStyle}>Quantity</label>
-              <input type="number" min="0" step="0.1" value={quantity} onChange={(e) => setQuantity(e.target.value)} style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Unit</label>
-              <UnitDropdown value={unitLabel} onChange={setUnitLabel} unitSystem={unitSystem} inputStyle={inputStyle} />
-            </div>
+            <div><label style={labelStyle}>Quantity</label><input type="number" min="0" step="0.1" value={quantity} onChange={(e) => setQuantity(e.target.value)} style={inputStyle} /></div>
+            <div><label style={labelStyle}>Unit</label><UnitDropdown value={unitLabel} onChange={setUnitLabel} unitSystem={unitSystem} inputStyle={inputStyle} /></div>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-            <div>
-              <label style={labelStyle}>Low Stock Threshold</label>
-              <input type="number" min="0" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} style={inputStyle} placeholder="0" />
-            </div>
-            <div>
-              <label style={labelStyle}>Expiration Date</label>
-              <input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }} />
-            </div>
+            <div><label style={labelStyle}>Low Stock Threshold</label><input type="number" min="0" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} style={inputStyle} placeholder="0" /></div>
+            <div><label style={labelStyle}>Expiration Date</label><input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }} /></div>
           </div>
-
-          {error && (
-            <div style={{
-              padding: "10px 12px", borderRadius: "8px", marginBottom: "12px",
-              background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)",
-              color: "var(--alert-expired-text)", fontSize: "13px",
-            }}>{error}</div>
-          )}
+          {error && (<div style={{ padding: "10px 12px", borderRadius: "8px", marginBottom: "12px", background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)", color: "var(--alert-expired-text)", fontSize: "13px" }}>{error}</div>)}
         </div>
-
-        {/* Modal footer */}
         <div style={{ padding: "12px 24px 20px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: "9px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 500,
-              background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)",
-              border: "1px solid var(--btn-cancel-border)", cursor: "pointer",
-            }}
+          <button onClick={onClose} style={{ padding: "9px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 500, background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)", border: "1px solid var(--btn-cancel-border)", cursor: "pointer" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--border)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--btn-cancel-bg)"; }}
           >Cancel</button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              padding: "9px 24px", borderRadius: "8px", fontSize: "14px", fontWeight: 700,
-              background: saving ? "#93b4d4" : "var(--brand)", color: "#fff",
-              border: "none", cursor: saving ? "not-allowed" : "pointer", transition: "background 0.15s",
-            }}
-          >{saving ? "Saving…" : "Save Changes"}</button>
+          <button onClick={handleSave} disabled={saving} style={{ padding: "9px 24px", borderRadius: "8px", fontSize: "14px", fontWeight: 700, background: saving ? "#93b4d4" : "var(--brand)", color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer" }}>
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.96) translateY(8px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
+      <style>{`@keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
     </div>
   );
 }
 
-// ─── Table Row ────────────────────────────────────────────────────────────────
+// --- Single item row ---
 
 function PantryRow({
-  item, categoryName, categoryColor, categories, sessionEmail, unitSystem, onEdit,
+  item, categoryName, categoryColor, categories, sessionEmail, unitSystem, onEdit, isChild,
 }: {
   item: any; categoryName: string; categoryColor?: string | null; categories: any[];
-  sessionEmail: any; unitSystem: "Imperial" | "Metric"; onEdit: (item: any) => void;
+  sessionEmail: any; unitSystem: "Imperial" | "Metric"; onEdit: (item: any) => void; isChild?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [expDate, setExpDate] = useState<string>(item.expirationDate ? item.expirationDate.split("T")[0] : "");
@@ -231,98 +157,56 @@ function PantryRow({
 
   const saveUnit = async (val: string) => {
     setUnitLabel(val);
-    await fetch(`/api/pantry/${item.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ unitLabel: val || null }),
-    });
+    await fetch(`/api/pantry/${item.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ unitLabel: val || null }) });
     queryClient.invalidateQueries({ queryKey: ["pantry", sessionEmail] });
   };
 
   return (
-    <tr
-      style={{ borderBottom: "1px solid var(--border)", transition: "background 0.15s" }}
+    <tr style={{ borderBottom: "1px solid var(--border)", transition: "background 0.15s" }}
       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--row-hover)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
       <td style={{ padding: "13px 16px", fontSize: "14px", fontWeight: 600, color: "var(--foreground)", whiteSpace: "nowrap" }}>
+        {isChild && <span style={{ display: "inline-block", width: "20px", marginRight: "4px", color: "var(--text-secondary)", fontSize: "14px" }}>└</span>}
         {item.itemName}
       </td>
       <td style={{ padding: "13px 16px" }}>
-        <span style={{
-          display: "inline-flex", alignItems: "center", gap: "6px",
-          padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600,
-          background: categoryColor ? `${categoryColor}22` : "var(--btn-edit-bg)",
-          color: categoryColor || "var(--brand)",
-          border: `1px solid ${categoryColor ? `${categoryColor}55` : "var(--btn-edit-border)"}`,
-        }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, background: categoryColor ? categoryColor + "22" : "var(--btn-edit-bg)", color: categoryColor || "var(--brand)", border: "1px solid " + (categoryColor ? categoryColor + "55" : "var(--btn-edit-border)") }}>
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: categoryColor || "var(--brand)" }} />
           {categoryName}
         </span>
       </td>
-      <td style={{ padding: "13px 16px" }}>
-        <QuantityAdjuster itemId={item.id} currentQty={Number(item.quantity)} />
-      </td>
+      <td style={{ padding: "13px 16px" }}><QuantityAdjuster itemId={item.id} currentQty={Number(item.quantity)} /></td>
       <td style={{ padding: "8px 16px", minWidth: "160px", maxWidth: "200px" }}>
         <UnitDropdown value={unitLabel} onChange={saveUnit} unitSystem={unitSystem} placeholder="Set unit…" inputStyle={{ fontSize: "13px", padding: "6px 10px" }} />
       </td>
       <td style={{ padding: "13px 16px", fontSize: "13px", textAlign: "center" }}>
-        {Number(item.lowThreshold) > 0
-          ? <span style={{ fontWeight: 600, color: Number(item.quantity) <= Number(item.lowThreshold) ? "var(--alert-soon-text)" : "var(--text-body)" }}>
-              {Number(item.lowThreshold)}
-            </span>
-          : <span style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>—</span>
-        }
+        {isChild ? (
+          <span style={{ color: "var(--border)", fontSize: "11px" }}>—</span>
+        ) : Number(item.lowThreshold) > 0 ? (
+          <span style={{ fontWeight: 600, color: Number(item.quantity) <= Number(item.lowThreshold) ? "var(--alert-soon-text)" : "var(--text-body)" }}>{Number(item.lowThreshold)}</span>
+        ) : (
+          <span style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>—</span>
+        )}
       </td>
       <td style={{ padding: "13px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <input
-            type="date"
-            value={expDate}
+          <input type="date" value={expDate}
             onChange={async (e) => {
               setExpDate(e.target.value);
-              await fetch(`/api/pantry/${item.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ expirationDate: e.target.value }),
-              });
+              await fetch(`/api/pantry/${item.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expirationDate: e.target.value }) });
               queryClient.invalidateQueries({ queryKey: ["pantry", sessionEmail] });
             }}
-            style={{
-              border: "1px solid var(--input-border)", borderRadius: "8px",
-              padding: "5px 8px", fontSize: "12px", color: "var(--input-color)",
-              background: "var(--input-bg)", outline: "none", cursor: "pointer",
-            }}
+            style={{ border: "1px solid var(--input-border)", borderRadius: "8px", padding: "5px 8px", fontSize: "12px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none", cursor: "pointer" }}
           />
-          {badge && (
-            <span style={{
-              padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700,
-              background: `var(${badge.bgVar})`, color: `var(${badge.colorVar})`,
-              border: `1px solid var(${badge.borderVar})`, whiteSpace: "nowrap",
-            }}>{badge.label}</span>
-          )}
+          {badge && <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "var(" + badge.bgVar + ")", color: "var(" + badge.colorVar + ")", border: "1px solid var(" + badge.borderVar + ")", whiteSpace: "nowrap" }}>{badge.label}</span>}
         </div>
       </td>
       <td style={{ padding: "13px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-          <button
-            onClick={() => onEdit(item)}
-            title="Edit item"
-            style={{
-              padding: "5px 12px", borderRadius: "7px", fontSize: "12px", fontWeight: 600,
-              background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)",
-              border: "1px solid var(--btn-edit-border)", cursor: "pointer", transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--brand)";
-              (e.currentTarget as HTMLElement).style.color = "#fff";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--btn-edit-bg)";
-              (e.currentTarget as HTMLElement).style.color = "var(--btn-edit-color)";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--btn-edit-border)";
-            }}
+          <button onClick={() => onEdit(item)} style={{ padding: "5px 12px", borderRadius: "7px", fontSize: "12px", fontWeight: 600, background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", border: "1px solid var(--btn-edit-border)", cursor: "pointer", transition: "all 0.15s" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--brand)"; (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--btn-edit-bg)"; (e.currentTarget as HTMLElement).style.color = "var(--btn-edit-color)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--btn-edit-border)"; }}
           >Edit</button>
           <DeleteButton itemId={item.id} />
         </div>
@@ -331,23 +215,168 @@ function PantryRow({
   );
 }
 
-// ─── Sort Icon ────────────────────────────────────────────────────────────────
+// --- Grouped summary row ---
+
+function GroupedRow({
+  name, items, categories, sessionEmail, unitSystem, onEdit, isExpanded, onToggle,
+}: {
+  name: string; items: any[]; categories: any[]; sessionEmail: any;
+  unitSystem: "Imperial" | "Metric"; onEdit: (item: any) => void;
+  isExpanded: boolean; onToggle: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const totalQty      = items.reduce((s, i) => s + Number(i.quantity), 0);
+  const categoryColor = items[0]?.categoryColor ?? null;
+  const categoryName  = items[0]?.categoryName ?? "Uncategorized";
+  const units         = [...new Set(items.map((i) => i.unitLabel).filter(Boolean))].join(" / ");
+
+  // Group threshold is the shared value stored on all items in the group
+  const groupThresholdValue = Number(items.find((i) => Number(i.lowThreshold) > 0)?.lowThreshold ?? 0);
+  const [thresholdInput, setThresholdInput] = useState(groupThresholdValue > 0 ? String(groupThresholdValue) : "");
+  const [savingThreshold, setSavingThreshold] = useState(false);
+
+  // Keep input in sync when data refreshes
+  useEffect(() => {
+    setThresholdInput(groupThresholdValue > 0 ? String(groupThresholdValue) : "");
+  }, [groupThresholdValue]);
+
+  const anyLowStock = groupThresholdValue > 0 && totalQty <= groupThresholdValue;
+
+  const saveGroupThreshold = async (val: string) => {
+    const parsed = parseFloat(val) || 0;
+    setSavingThreshold(true);
+    // Write the threshold to every item in the group simultaneously
+    await Promise.all(
+      items.map((item) =>
+        fetch(`/api/pantry/${item.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lowThreshold: parsed }),
+        })
+      )
+    );
+    queryClient.invalidateQueries({ queryKey: ["pantry", sessionEmail] });
+    setSavingThreshold(false);
+  };
+
+  const worstBadge = useMemo(() => {
+    const badges = items.map((i) => getExpiryBadge(i.expirationDate)).filter(Boolean) as NonNullable<ReturnType<typeof getExpiryBadge>>[];
+    return badges.find((b) => b.bgVar === "--alert-expired-bg") ?? badges[0] ?? null;
+  }, [items]);
+
+  return (
+    <>
+      {/* Summary row */}
+      <tr onClick={onToggle}
+        style={{ borderBottom: isExpanded ? "none" : "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s", background: isExpanded ? "var(--edit-row-bg)" : "transparent" }}
+        onMouseEnter={(e) => { if (!isExpanded) (e.currentTarget as HTMLElement).style.background = "var(--row-hover)"; }}
+        onMouseLeave={(e) => { if (!isExpanded) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+      >
+        {/* Name */}
+        <td style={{ padding: "13px 16px", fontSize: "14px", fontWeight: 700, color: "var(--foreground)", whiteSpace: "nowrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "20px", height: "20px", borderRadius: "6px", background: isExpanded ? "var(--brand)" : "var(--btn-cancel-bg)", border: "1px solid " + (isExpanded ? "var(--brand)" : "var(--border)"), color: isExpanded ? "#fff" : "var(--text-secondary)", fontSize: "10px", flexShrink: 0, transition: "all 0.2s" }}>
+              {isExpanded ? "▲" : "▼"}
+            </span>
+            {name}
+            <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", border: "1px solid var(--btn-edit-border)" }}>
+              {items.length}×
+            </span>
+            {anyLowStock && (
+              <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "var(--alert-soon-bg)", color: "var(--alert-soon-text)", border: "1px solid var(--alert-soon-border)", whiteSpace: "nowrap" }}>
+                Low Stock
+              </span>
+            )}
+            {worstBadge && (
+              <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "var(" + worstBadge.bgVar + ")", color: "var(" + worstBadge.colorVar + ")", border: "1px solid var(" + worstBadge.borderVar + ")", whiteSpace: "nowrap" }}>
+                {worstBadge.label}
+              </span>
+            )}
+          </div>
+        </td>
+        {/* Category */}
+        <td style={{ padding: "13px 16px" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, background: categoryColor ? categoryColor + "22" : "var(--btn-edit-bg)", color: categoryColor || "var(--brand)", border: "1px solid " + (categoryColor ? categoryColor + "55" : "var(--btn-edit-border)") }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: categoryColor || "var(--brand)" }} />
+            {categoryName}
+          </span>
+        </td>
+        {/* Total qty */}
+        <td style={{ padding: "13px 16px" }}>
+          <span style={{ fontSize: "14px", fontWeight: 600, color: anyLowStock ? "var(--alert-soon-text)" : "var(--text-body)" }}>
+            {Number.isInteger(totalQty) ? totalQty : totalQty.toFixed(1)} total
+          </span>
+        </td>
+        {/* Units */}
+        <td style={{ padding: "13px 16px", fontSize: "13px", color: "var(--text-secondary)", fontStyle: units ? "normal" : "italic" }}>
+          {units || "—"}
+        </td>
+        {/* Inline editable group threshold — stopPropagation so clicking it doesn't toggle expand */}
+        <td style={{ padding: "8px 16px", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={thresholdInput}
+            placeholder="—"
+            title="Group restock threshold (based on total quantity)"
+            onChange={(e) => setThresholdInput(e.target.value)}
+            onBlur={(e) => saveGroupThreshold(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+            style={{
+              width: "64px", padding: "5px 8px", borderRadius: "7px", textAlign: "center",
+              border: "1px solid var(--input-border)", fontSize: "13px", fontWeight: 600,
+              color: anyLowStock ? "var(--alert-soon-text)" : "var(--input-color)",
+              background: anyLowStock ? "var(--alert-soon-bg)" : "var(--input-bg)",
+              outline: "none", opacity: savingThreshold ? 0.5 : 1,
+              transition: "opacity 0.15s, border-color 0.15s",
+              cursor: "text",
+            }}
+            onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = "var(--brand)"; }}
+          />
+        </td>
+        {/* Expiry — blank at group level */}
+        <td style={{ padding: "13px 16px" }} />
+        {/* Actions hint */}
+        <td style={{ padding: "13px 16px", textAlign: "center" }}>
+          <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontStyle: "italic" }}>
+            {isExpanded ? "Click to collapse" : "Click to expand"}
+          </span>
+        </td>
+      </tr>
+
+      {/* Child rows when expanded */}
+      {isExpanded && items.map((item) => (
+        <PantryRow key={item.id} item={item} categoryName={item.categoryName} categoryColor={item.categoryColor}
+          categories={categories} sessionEmail={sessionEmail} unitSystem={unitSystem} onEdit={onEdit} isChild />
+      ))}
+
+      {/* Closing accent border */}
+      {isExpanded && (
+        <tr><td colSpan={7} style={{ padding: 0, height: "3px", background: "var(--brand)", opacity: 0.25 }} /></tr>
+      )}
+    </>
+  );
+}
+
+// --- Sort Icon ---
 
 function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
   if (sortField !== field) return <span style={{ color: "var(--border)", marginLeft: "4px" }}>↕</span>;
   return <span style={{ color: "var(--brand)", marginLeft: "4px" }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// --- Page ---
 
 export default function PantryPage() {
   const { data: session, status } = useSession({ required: true });
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState<SortField>("itemName");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [search, setSearch]               = useState("");
+  const [sortField, setSortField]         = useState<SortField>("itemName");
+  const [sortDir, setSortDir]             = useState<SortDir>("asc");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem]     = useState<any>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const { data, isLoading } = useQuery({
     queryKey: ["pantry", session?.user?.email],
@@ -372,26 +401,22 @@ export default function PantryPage() {
   const allItems = useMemo(() => {
     if (!Array.isArray(data)) return [];
     return data.flatMap((cat: any) =>
-      (cat.items || []).map((item: any) => ({
-        ...item, categoryName: cat.name ?? "Uncategorized", categoryColor: cat.color ?? null,
-      }))
+      (cat.items || []).map((item: any) => ({ ...item, categoryName: cat.name ?? "Uncategorized", categoryColor: cat.color ?? null }))
     );
   }, [data]);
 
   const filteredSorted = useMemo(() => {
     let rows = allItems.filter((item) => {
-      const matchSearch =
-        item.itemName.toLowerCase().includes(search.toLowerCase()) ||
-        item.categoryName.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = item.itemName.toLowerCase().includes(search.toLowerCase()) || item.categoryName.toLowerCase().includes(search.toLowerCase());
       const matchCat = categoryFilter === "all" || item.categoryName === categoryFilter;
       return matchSearch && matchCat;
     });
 
     rows.sort((a, b) => {
       let aVal: any, bVal: any;
-      if (sortField === "category")          { aVal = a.categoryName;    bVal = b.categoryName; }
-      else if (sortField === "quantity")     { aVal = Number(a.quantity); bVal = Number(b.quantity); }
-      else if (sortField === "lowThreshold") { aVal = Number(a.lowThreshold); bVal = Number(b.lowThreshold); }
+      if (sortField === "category")            { aVal = a.categoryName;     bVal = b.categoryName; }
+      else if (sortField === "quantity")       { aVal = Number(a.quantity); bVal = Number(b.quantity); }
+      else if (sortField === "lowThreshold")   { aVal = Number(a.lowThreshold); bVal = Number(b.lowThreshold); }
       else if (sortField === "expirationDate") {
         aVal = a.expirationDate ? new Date(a.expirationDate).getTime() : Infinity;
         bVal = b.expirationDate ? new Date(b.expirationDate).getTime() : Infinity;
@@ -407,17 +432,32 @@ export default function PantryPage() {
     return rows;
   }, [allItems, search, categoryFilter, sortField, sortDir]);
 
+  // Group by name (case-insensitive), preserving sort order
+  const groupedRows = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const item of filteredSorted) {
+      const key = item.itemName.toLowerCase().trim();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(item);
+    }
+    return Array.from(map.entries()).map(([key, items]) => ({ key, name: items[0].itemName, items, isGroup: items.length > 1 }));
+  }, [filteredSorted]);
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortField(field); setSortDir("asc"); }
   };
 
   if (status === "loading" || isLoading || catsLoading) {
-    return (
-      <AppShell>
-        <div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading pantry...</div>
-      </AppShell>
-    );
+    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading pantry...</div></AppShell>;
   }
 
   const thStyle = (field: SortField): React.CSSProperties => ({
@@ -427,6 +467,8 @@ export default function PantryPage() {
     background: sortField === field ? "var(--th-bg-active)" : "var(--th-bg)",
     borderBottom: "2px solid var(--th-border)",
   });
+
+  const totalGrouped = groupedRows.filter((g) => g.isGroup).length;
 
   return (
     <AppShell>
@@ -438,129 +480,81 @@ export default function PantryPage() {
             <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Pantry Inventory</h1>
             <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
               {filteredSorted.length} of {allItems.length} item{allItems.length !== 1 ? "s" : ""}
+              {totalGrouped > 0 && <span style={{ color: "var(--text-secondary)", marginLeft: "8px" }}>· {totalGrouped} grouped name{totalGrouped !== 1 ? "s" : ""}</span>}
             </p>
           </div>
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-            <Link href="/scan" style={{
-              padding: "10px 18px", borderRadius: "10px", background: "var(--btn-edit-bg)",
-              color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px",
-              textDecoration: "none", border: "1px solid var(--btn-edit-border)",
-            }}>
-              📷 Scan Barcode
-            </Link>
+            <Link href="/scan" style={{ padding: "10px 18px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid var(--btn-edit-border)" }}>📷 Scan Barcode</Link>
             <AddItemForm categories={categories || []} unitSystem={unitSystem} />
           </div>
         </div>
 
         {/* Filters */}
         <div style={{ display: "flex", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
-          <input
-            placeholder="Search by name or category..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              flex: "1", minWidth: "200px", maxWidth: "360px", padding: "9px 14px",
-              border: "1px solid var(--input-border)", borderRadius: "10px",
-              fontSize: "14px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none",
-            }}
+          <input placeholder="Search by name or category..." value={search} onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: "1", minWidth: "200px", maxWidth: "360px", padding: "9px 14px", border: "1px solid var(--input-border)", borderRadius: "10px", fontSize: "14px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none" }}
           />
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{
-              padding: "9px 14px", border: "1px solid var(--input-border)", borderRadius: "10px",
-              fontSize: "14px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none", cursor: "pointer",
-            }}
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
+            style={{ padding: "9px 14px", border: "1px solid var(--input-border)", borderRadius: "10px", fontSize: "14px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none", cursor: "pointer" }}
           >
             <option value="all">All Categories</option>
-            {(categories || []).map((cat: any) => (
-              <option key={cat.id} value={cat.name}>{cat.name}</option>
-            ))}
+            {(categories || []).map((cat: any) => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
           </select>
         </div>
 
         {/* Table */}
-        <div style={{
-          background: "var(--card-bg)", borderRadius: "14px",
-          border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)", overflow: "hidden",
-        }}>
+        <div style={{ background: "var(--card-bg)", borderRadius: "14px", border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)", overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
               <thead>
                 <tr>
-                  <th style={thStyle("itemName")} onClick={() => handleSort("itemName")}>
-                    Name <SortIcon field="itemName" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th style={thStyle("category")} onClick={() => handleSort("category")}>
-                    Category <SortIcon field="category" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th style={thStyle("quantity")} onClick={() => handleSort("quantity")}>
-                    Quantity <SortIcon field="quantity" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th style={thStyle("unitLabel")} onClick={() => handleSort("unitLabel")}>
-                    Unit <SortIcon field="unitLabel" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th style={{ ...thStyle("lowThreshold"), textAlign: "center" }} onClick={() => handleSort("lowThreshold")}>
-                    Threshold <SortIcon field="lowThreshold" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th style={thStyle("expirationDate")} onClick={() => handleSort("expirationDate")}>
-                    Expiration Date <SortIcon field="expirationDate" sortField={sortField} sortDir={sortDir} />
-                  </th>
-                  <th style={{ ...thStyle("itemName" as SortField), cursor: "default", textAlign: "center" }}>
-                    Actions
-                  </th>
+                  <th style={thStyle("itemName")} onClick={() => handleSort("itemName")}>Name <SortIcon field="itemName" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={thStyle("category")} onClick={() => handleSort("category")}>Category <SortIcon field="category" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={thStyle("quantity")} onClick={() => handleSort("quantity")}>Quantity <SortIcon field="quantity" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={thStyle("unitLabel")} onClick={() => handleSort("unitLabel")}>Unit <SortIcon field="unitLabel" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={{ ...thStyle("lowThreshold"), textAlign: "center" }} onClick={() => handleSort("lowThreshold")}>Threshold <SortIcon field="lowThreshold" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={thStyle("expirationDate")} onClick={() => handleSort("expirationDate")}>Expiration Date <SortIcon field="expirationDate" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={{ ...thStyle("itemName" as SortField), cursor: "default", textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredSorted.length > 0 ? (
-                  filteredSorted.map((item: any) => (
-                    <PantryRow
-                      key={item.id} item={item}
-                      categoryName={item.categoryName} categoryColor={item.categoryColor}
-                      categories={categories || []} sessionEmail={session?.user?.email}
-                      unitSystem={unitSystem} onEdit={setEditingItem}
-                    />
-                  ))
+                {groupedRows.length > 0 ? (
+                  groupedRows.map(({ key, name, items, isGroup }) =>
+                    isGroup ? (
+                      <GroupedRow key={key} name={name} items={items} categories={categories || []} sessionEmail={session?.user?.email}
+                        unitSystem={unitSystem} onEdit={setEditingItem} isExpanded={expandedGroups.has(key)} onToggle={() => toggleGroup(key)} />
+                    ) : (
+                      <PantryRow key={items[0].id} item={items[0]} categoryName={items[0].categoryName} categoryColor={items[0].categoryColor}
+                        categories={categories || []} sessionEmail={session?.user?.email} unitSystem={unitSystem} onEdit={setEditingItem} />
+                    )
+                  )
                 ) : (
-                  <tr>
-                    <td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
-                      {allItems.length === 0 ? "Your pantry is empty — add your first item!" : "No items match your search."}
-                    </td>
-                  </tr>
+                  <tr><td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
+                    {allItems.length === 0 ? "Your pantry is empty — add your first item!" : "No items match your search."}
+                  </td></tr>
                 )}
               </tbody>
             </table>
           </div>
 
-          {/* Table footer */}
           {filteredSorted.length > 0 && (
-            <div style={{
-              padding: "12px 20px", borderTop: "1px solid var(--border)",
-              background: "var(--surface-subtle)", display: "flex", gap: "20px",
-              fontSize: "12px", color: "var(--text-secondary)",
-            }}>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)", background: "var(--surface-subtle)", display: "flex", gap: "20px", fontSize: "12px", color: "var(--text-secondary)" }}>
               <span>{filteredSorted.length} item{filteredSorted.length !== 1 ? "s" : ""}</span>
               <span>·</span>
-              <span style={{ color: "var(--alert-soon-text)" }}>
-                {filteredSorted.filter((i: any) => Number(i.quantity) <= Number(i.lowThreshold) && Number(i.lowThreshold) > 0).length} low stock
-              </span>
+              <span style={{ color: "var(--alert-soon-text)" }}>{filteredSorted.filter((i: any) => Number(i.quantity) <= Number(i.lowThreshold) && Number(i.lowThreshold) > 0).length} low stock</span>
               <span>·</span>
-              <span style={{ color: "var(--alert-expired-text)" }}>
-                {filteredSorted.filter((i: any) => {
-                  if (!i.expirationDate) return false;
-                  const today = new Date(); today.setHours(0,0,0,0);
-                  return Math.round((parseLocalDate(i.expirationDate).getTime() - today.getTime()) / 86400000) <= 5;
-                }).length} expiring soon
-              </span>
+              <span style={{ color: "var(--alert-expired-text)" }}>{filteredSorted.filter((i: any) => {
+                if (!i.expirationDate) return false;
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                return Math.round((parseLocalDate(i.expirationDate).getTime() - today.getTime()) / 86400000) <= 5;
+              }).length} expiring soon</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Edit Modal */}
       {editingItem && (
-        <EditItemModal
-          item={editingItem} categories={categories || []} unitSystem={unitSystem}
+        <EditItemModal item={editingItem} categories={categories || []} unitSystem={unitSystem}
           onClose={() => setEditingItem(null)}
           onSaved={() => queryClient.invalidateQueries({ queryKey: ["pantry", session?.user?.email] })}
         />

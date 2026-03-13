@@ -36,6 +36,35 @@ export async function DELETE(
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
+
+  // Fetch the item before deleting so we know its name and threshold
+  const itemToDelete = await db.pantryItem.findUnique({
+    where: { id, userId: session.user.id },
+  });
+  if (!itemToDelete) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
   await db.pantryItem.delete({ where: { id, userId: session.user.id } });
+
+  // ── Threshold migration: check remaining siblings after delete ──────────────
+  const remaining = await db.pantryItem.findMany({
+    where: {
+      userId: session.user.id,
+      itemName: { equals: itemToDelete.itemName, mode: "insensitive" },
+    },
+  });
+
+  if (remaining.length === 1) {
+    // Group collapsed to singleton — copy the group's threshold to the last item
+    // The group threshold is stored on all items; grab it from the deleted item
+    // (or from the remaining one if it already has one)
+    const groupThreshold = Number(itemToDelete.lowThreshold) || Number(remaining[0].lowThreshold);
+    if (groupThreshold > 0) {
+      await db.pantryItem.update({
+        where: { id: remaining[0].id },
+        data: { lowThreshold: groupThreshold },
+      });
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
