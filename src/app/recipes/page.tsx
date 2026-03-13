@@ -14,6 +14,9 @@ export default function RecipesPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [recipeDetail, setRecipeDetail] = useState<any>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [showFilterPopup, setShowFilterPopup] = useState(false);
+  const [excludedItems, setExcludedItems] = useState<Set<string>>(new Set());
+  const [filterSearch, setFilterSearch] = useState("");
 
   const { data: pantryData, isLoading } = useQuery({
     queryKey: ["pantry", session?.user?.email],
@@ -28,7 +31,21 @@ export default function RecipesPage() {
     });
   }
 
-  const ingredientNames = allItems.map((i) => i.itemName).join(",");
+  const activeItems = allItems.filter((i) => !excludedItems.has(i.itemName));
+  const ingredientNames = activeItems.map((i) => i.itemName).join(",");
+
+  const toggleExclude = (itemName: string) => {
+    setExcludedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemName)) next.delete(itemName);
+      else next.add(itemName);
+      return next;
+    });
+  };
+
+  const filteredPopupItems = allItems.filter((i) =>
+    i.itemName.toLowerCase().includes(filterSearch.toLowerCase())
+  );
 
   const searchRecipes = async () => {
     if (!ingredientNames) return;
@@ -81,27 +98,52 @@ export default function RecipesPage() {
             <div>
               <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", margin: 0 }}>Your Pantry Ingredients</h2>
               <p style={{ color: "#4A5568", fontSize: "13px", marginTop: "4px" }}>
-                {allItems.length} items will be matched against Spoonacular recipes.
+                {activeItems.length} of {allItems.length} items will be matched against Spoonacular recipes.
+                {excludedItems.size > 0 && (
+                  <span style={{ color: "#E07B54", fontWeight: 600 }}> ({excludedItems.size} excluded)</span>
+                )}
               </p>
             </div>
-            <button
-              onClick={searchRecipes}
-              disabled={searching || allItems.length === 0}
-              style={{
-                padding: "10px 24px", borderRadius: "10px", background: "#4A6FA5",
-                color: "#fff", fontWeight: 700, fontSize: "14px", border: "none",
-                cursor: allItems.length === 0 ? "not-allowed" : "pointer",
-                opacity: allItems.length === 0 ? 0.5 : 1,
-              }}
-            >
-              {searching ? "Searching..." : "🔍 Find Recipes"}
-            </button>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button
+                onClick={() => setShowFilterPopup(true)}
+                disabled={allItems.length === 0}
+                style={{
+                  padding: "10px 18px", borderRadius: "10px",
+                  background: excludedItems.size > 0 ? "#FFF3ED" : "#F7FAFC",
+                  color: excludedItems.size > 0 ? "#C05621" : "#4A5568",
+                  fontWeight: 700, fontSize: "14px",
+                  border: excludedItems.size > 0 ? "1px solid #F6AD55" : "1px solid #e2e8f0",
+                  cursor: allItems.length === 0 ? "not-allowed" : "pointer",
+                  opacity: allItems.length === 0 ? 0.5 : 1,
+                  display: "flex", alignItems: "center", gap: "6px",
+                }}
+              >
+                {`\uD83D\uDEAB Exclude Items${excludedItems.size > 0 ? ` (${excludedItems.size})` : ""}`}
+              </button>
+              <button
+                onClick={searchRecipes}
+                disabled={searching || activeItems.length === 0}
+                style={{
+                  padding: "10px 24px", borderRadius: "10px", background: "#4A6FA5",
+                  color: "#fff", fontWeight: 700, fontSize: "14px", border: "none",
+                  cursor: activeItems.length === 0 ? "not-allowed" : "pointer",
+                  opacity: activeItems.length === 0 ? 0.5 : 1,
+                }}
+              >
+                {searching ? "Searching..." : "\uD83D\uDD0D Find Recipes"}
+              </button>
+            </div>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {allItems.slice(0, 20).map((item) => (
               <span key={item.id} style={{
                 padding: "4px 12px", borderRadius: "20px", fontSize: "12px",
-                background: "#F5EDE4", color: "#A0724A", border: "1px solid #D4B49A", fontWeight: 500,
+                background: excludedItems.has(item.itemName) ? "#F7FAFC" : "#F5EDE4",
+                color: excludedItems.has(item.itemName) ? "#A0AEC0" : "#A0724A",
+                border: `1px solid ${excludedItems.has(item.itemName) ? "#e2e8f0" : "#D4B49A"}`,
+                fontWeight: 500,
+                textDecoration: excludedItems.has(item.itemName) ? "line-through" : "none",
               }}>{item.itemName}</span>
             ))}
             {allItems.length > 20 && (
@@ -111,6 +153,101 @@ export default function RecipesPage() {
             )}
           </div>
         </div>
+
+        {/* Filter Popup */}
+        {showFilterPopup && (
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+            onClick={() => setShowFilterPopup(false)}
+          >
+            <div
+              style={{ background: "#fff", borderRadius: "18px", maxWidth: "480px", width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ padding: "24px 24px 16px", borderBottom: "1px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#2D3748", margin: 0 }}>Exclude Ingredients</h2>
+                  <button onClick={() => setShowFilterPopup(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#A0AEC0" }}>&#x2715;</button>
+                </div>
+                <p style={{ color: "#718096", fontSize: "13px", margin: "0 0 14px" }}>
+                  Select items you <strong>don&apos;t</strong> want included in your recipe search.
+                </p>
+                <input
+                  type="text"
+                  placeholder="Search ingredients..."
+                  value={filterSearch}
+                  onChange={(e) => setFilterSearch(e.target.value)}
+                  style={{
+                    width: "100%", padding: "9px 14px", borderRadius: "8px",
+                    border: "1px solid #CBD5E0", fontSize: "14px", outline: "none",
+                    boxSizing: "border-box", color: "#2D3748",
+                  }}
+                />
+              </div>
+              <div style={{ overflowY: "auto", flex: 1, padding: "12px 24px" }}>
+                {filteredPopupItems.length === 0 ? (
+                  <p style={{ color: "#A0AEC0", fontSize: "14px", textAlign: "center", padding: "24px 0" }}>No items match your search.</p>
+                ) : (
+                  filteredPopupItems.map((item) => {
+                    const excluded = excludedItems.has(item.itemName);
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleExclude(item.itemName)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10px 14px", borderRadius: "10px", marginBottom: "6px",
+                          background: excluded ? "#FFF3ED" : "#F7FAFC",
+                          border: `1px solid ${excluded ? "#F6AD55" : "#e2e8f0"}`,
+                          cursor: "pointer", transition: "all 0.15s",
+                        }}
+                      >
+                        <span style={{
+                          fontSize: "14px", fontWeight: 500,
+                          color: excluded ? "#C05621" : "#2D3748",
+                          textDecoration: excluded ? "line-through" : "none",
+                        }}>
+                          {item.itemName}
+                        </span>
+                        <div style={{
+                          width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0,
+                          background: excluded ? "#C05621" : "#fff",
+                          border: `2px solid ${excluded ? "#C05621" : "#CBD5E0"}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          {excluded && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>&#x2715;</span>}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              <div style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+                <button
+                  onClick={() => setExcludedItems(new Set())}
+                  disabled={excludedItems.size === 0}
+                  style={{
+                    padding: "9px 16px", borderRadius: "8px", border: "1px solid #e2e8f0",
+                    background: "#fff", color: "#718096", fontSize: "13px", fontWeight: 600,
+                    cursor: excludedItems.size === 0 ? "not-allowed" : "pointer",
+                    opacity: excludedItems.size === 0 ? 0.5 : 1,
+                  }}
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setShowFilterPopup(false)}
+                  style={{
+                    padding: "9px 24px", borderRadius: "8px", background: "#4A6FA5",
+                    color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer",
+                  }}
+                >
+                  Apply ({activeItems.length} items included)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "16px", marginBottom: "16px", color: "#dc2626", fontSize: "14px" }}>
