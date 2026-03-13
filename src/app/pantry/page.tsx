@@ -25,26 +25,19 @@ function getExpiryBadge(dateStr: string | null) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const exp = parseLocalDate(dateStr);
   const diffDays = Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays < 0)  return { label: "Expired", bg: "#fef2f2", color: "#dc2626", border: "#fecaca" };
-  if (diffDays === 0) return { label: "Today",   bg: "#fff7ed", color: "#ea580c", border: "#fed7aa" };
-  if (diffDays <= 5)  return { label: `${diffDays}d`, bg: "#fffbeb", color: "#ca8a04", border: "#fde68a" };
+  if (diffDays < 0)  return { label: "Expired", bgVar: "--alert-expired-bg", colorVar: "--alert-expired-text", borderVar: "--alert-expired-border" };
+  if (diffDays === 0) return { label: "Today",   bgVar: "--alert-soon-bg",    colorVar: "--alert-soon-text",    borderVar: "--alert-soon-border" };
+  if (diffDays <= 5)  return { label: `${diffDays}d`, bgVar: "--alert-soon-bg", colorVar: "--alert-soon-text", borderVar: "--alert-soon-border" };
   return null;
 }
 
-// ─── Edit Modal ──────────────────────────────────────────────────────────────
+// ─── Edit Modal ───────────────────────────────────────────────────────────────
 
 function EditItemModal({
-  item,
-  categories,
-  unitSystem,
-  onClose,
-  onSaved,
+  item, categories, unitSystem, onClose, onSaved,
 }: {
-  item: any;
-  categories: any[];
-  unitSystem: "Imperial" | "Metric";
-  onClose: () => void;
-  onSaved: () => void;
+  item: any; categories: any[]; unitSystem: "Imperial" | "Metric";
+  onClose: () => void; onSaved: () => void;
 }) {
   const [itemName, setItemName]     = useState(item.itemName ?? "");
   const [categoryId, setCategoryId] = useState(item.categoryId ?? "");
@@ -57,7 +50,6 @@ function EditItemModal({
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
@@ -66,39 +58,31 @@ function EditItemModal({
 
   const handleSave = async () => {
     if (!itemName.trim()) { setError("Item name is required."); return; }
-    setSaving(true);
-    setError("");
+    setSaving(true); setError("");
     try {
       const res = await fetch(`/api/pantry/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          itemName: itemName.trim(),
-          categoryId: categoryId || null,
-          quantity: parseFloat(quantity) || 0,
-          unitLabel: unitLabel.trim() || null,
-          lowThreshold: parseFloat(threshold) || 0,
-          expirationDate: expDate || null,
+          itemName: itemName.trim(), categoryId: categoryId || null,
+          quantity: parseFloat(quantity) || 0, unitLabel: unitLabel.trim() || null,
+          lowThreshold: parseFloat(threshold) || 0, expirationDate: expDate || null,
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
-      onSaved();
-      onClose();
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+      onSaved(); onClose();
+    } catch { setError("Something went wrong. Please try again."); }
+    finally { setSaving(false); }
   };
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "9px 12px", border: "1px solid #E2E8F0",
-    borderRadius: "8px", fontSize: "14px", color: "#2D3748",
-    background: "#fff", outline: "none", boxSizing: "border-box",
+    width: "100%", padding: "9px 12px", border: "1px solid var(--input-border)",
+    borderRadius: "8px", fontSize: "14px", color: "var(--input-color)",
+    background: "var(--input-bg)", outline: "none", boxSizing: "border-box",
   };
   const labelStyle: React.CSSProperties = {
     display: "block", fontSize: "12px", fontWeight: 700,
-    color: "#4A5568", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em",
+    color: "var(--text-body)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em",
   };
   const fieldStyle: React.CSSProperties = { marginBottom: "16px" };
 
@@ -107,79 +91,59 @@ function EditItemModal({
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)",
+        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)",
         display: "flex", alignItems: "center", justifyContent: "center", padding: "24px",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "480px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden",
-          animation: "modalIn 0.18s ease",
+          background: "var(--card-bg)", borderRadius: "16px", width: "100%", maxWidth: "480px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.35)", overflow: "hidden",
+          animation: "modalIn 0.18s ease", border: "1px solid var(--card-border)",
         }}
       >
         {/* Modal header */}
         <div style={{
-          padding: "20px 24px 16px",
-          borderBottom: "1px solid #E2E8F0",
+          padding: "20px 24px 16px", borderBottom: "1px solid var(--border)",
           display: "flex", justifyContent: "space-between", alignItems: "center",
-          background: "#F7FAFC",
+          background: "var(--surface-subtle)",
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 800, color: "#2D3748" }}>Edit Item</h2>
-            <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#A0AEC0" }}>{item.itemName}</p>
+            <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 800, color: "var(--foreground)" }}>Edit Item</h2>
+            <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--text-secondary)" }}>{item.itemName}</p>
           </div>
           <button
             onClick={onClose}
             style={{
               background: "none", border: "none", fontSize: "20px", cursor: "pointer",
-              color: "#A0AEC0", lineHeight: 1, padding: "2px 6px", borderRadius: "6px",
+              color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#2D3748"; (e.currentTarget as HTMLElement).style.background = "#E2E8F0"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#A0AEC0"; (e.currentTarget as HTMLElement).style.background = "none"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--foreground)"; (e.currentTarget as HTMLElement).style.background = "var(--border)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.background = "none"; }}
           >✕</button>
         </div>
 
         {/* Modal body */}
         <div style={{ padding: "20px 24px 4px" }}>
-
-          {/* Item Name */}
           <div style={fieldStyle}>
             <label style={labelStyle}>Item Name</label>
-            <input
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              style={inputStyle}
-              placeholder="e.g. Whole Milk"
-            />
+            <input value={itemName} onChange={(e) => setItemName(e.target.value)} style={inputStyle} placeholder="e.g. Whole Milk" />
           </div>
-
-          {/* Category */}
           <div style={fieldStyle}>
             <label style={labelStyle}>Category</label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              style={{ ...inputStyle, cursor: "pointer" }}
-            >
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
               <option value="">— Uncategorized —</option>
               {categories.map((cat: any) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.color ? `● ${cat.name}` : cat.name}
-                </option>
+                <option key={cat.id} value={cat.id}>{cat.color ? `● ${cat.name}` : cat.name}</option>
               ))}
             </select>
-            {/* Color preview of selected category */}
             {categoryId && (() => {
               const selected = categories.find((c: any) => c.id === categoryId);
               return selected?.color ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
-                  <div style={{
-                    width: "12px", height: "12px", borderRadius: "50%",
-                    background: selected.color, border: "1px solid rgba(0,0,0,0.1)",
-                  }} />
-                  <span style={{ fontSize: "12px", color: "#4A5568" }}>
+                  <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: selected.color, border: "1px solid rgba(0,0,0,0.1)" }} />
+                  <span style={{ fontSize: "12px", color: "var(--text-body)" }}>
                     {selected.name} — <span style={{ fontFamily: "monospace" }}>{selected.color}</span>
                   </span>
                 </div>
@@ -187,94 +151,58 @@ function EditItemModal({
             })()}
           </div>
 
-          {/* Quantity + Unit side by side */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
             <div>
               <label style={labelStyle}>Quantity</label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                style={inputStyle}
-              />
+              <input type="number" min="0" step="0.1" value={quantity} onChange={(e) => setQuantity(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>Unit</label>
-              <UnitDropdown
-                value={unitLabel}
-                onChange={setUnitLabel}
-                unitSystem={unitSystem}
-                inputStyle={inputStyle}
-              />
+              <UnitDropdown value={unitLabel} onChange={setUnitLabel} unitSystem={unitSystem} inputStyle={inputStyle} />
             </div>
           </div>
 
-          {/* Threshold + Expiry side by side */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
             <div>
               <label style={labelStyle}>Low Stock Threshold</label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                style={inputStyle}
-                placeholder="0"
-              />
+              <input type="number" min="0" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} style={inputStyle} placeholder="0" />
             </div>
             <div>
               <label style={labelStyle}>Expiration Date</label>
-              <input
-                type="date"
-                value={expDate}
-                onChange={(e) => setExpDate(e.target.value)}
-                style={{ ...inputStyle, cursor: "pointer" }}
-              />
+              <input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }} />
             </div>
           </div>
 
           {error && (
             <div style={{
               padding: "10px 12px", borderRadius: "8px", marginBottom: "12px",
-              background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", fontSize: "13px",
-            }}>
-              {error}
-            </div>
+              background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)",
+              color: "var(--alert-expired-text)", fontSize: "13px",
+            }}>{error}</div>
           )}
         </div>
 
         {/* Modal footer */}
-        <div style={{
-          padding: "12px 24px 20px",
-          display: "flex", gap: "10px", justifyContent: "flex-end",
-        }}>
+        <div style={{ padding: "12px 24px 20px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
           <button
             onClick={onClose}
             style={{
               padding: "9px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 500,
-              background: "#F7FAFC", color: "#4A5568", border: "1px solid #E2E8F0", cursor: "pointer",
+              background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)",
+              border: "1px solid var(--btn-cancel-border)", cursor: "pointer",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#E2E8F0"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#F7FAFC"; }}
-          >
-            Cancel
-          </button>
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--border)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--btn-cancel-bg)"; }}
+          >Cancel</button>
           <button
             onClick={handleSave}
             disabled={saving}
             style={{
               padding: "9px 24px", borderRadius: "8px", fontSize: "14px", fontWeight: 700,
-              background: saving ? "#93b4d4" : "#4A6FA5", color: "#fff",
+              background: saving ? "#93b4d4" : "var(--brand)", color: "#fff",
               border: "none", cursor: saving ? "not-allowed" : "pointer", transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => { if (!saving) (e.currentTarget as HTMLElement).style.background = "#3d5c8a"; }}
-            onMouseLeave={(e) => { if (!saving) (e.currentTarget as HTMLElement).style.background = "#4A6FA5"; }}
-          >
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
+          >{saving ? "Saving…" : "Save Changes"}</button>
         </div>
       </div>
 
@@ -291,26 +219,13 @@ function EditItemModal({
 // ─── Table Row ────────────────────────────────────────────────────────────────
 
 function PantryRow({
-  item,
-  categoryName,
-  categoryColor,
-  categories,
-  sessionEmail,
-  unitSystem,
-  onEdit,
+  item, categoryName, categoryColor, categories, sessionEmail, unitSystem, onEdit,
 }: {
-  item: any;
-  categoryName: string;
-  categoryColor?: string | null;
-  categories: any[];
-  sessionEmail: any;
-  unitSystem: "Imperial" | "Metric";
-  onEdit: (item: any) => void;
+  item: any; categoryName: string; categoryColor?: string | null; categories: any[];
+  sessionEmail: any; unitSystem: "Imperial" | "Metric"; onEdit: (item: any) => void;
 }) {
   const queryClient = useQueryClient();
-  const [expDate, setExpDate] = useState<string>(
-    item.expirationDate ? item.expirationDate.split("T")[0] : ""
-  );
+  const [expDate, setExpDate] = useState<string>(item.expirationDate ? item.expirationDate.split("T")[0] : "");
   const [unitLabel, setUnitLabel] = useState<string>(item.unitLabel ?? "");
   const badge = getExpiryBadge(expDate);
 
@@ -326,60 +241,39 @@ function PantryRow({
 
   return (
     <tr
-      style={{ borderBottom: "1px solid #E2E8F0", transition: "background 0.15s" }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "#F7FAFC")}
+      style={{ borderBottom: "1px solid var(--border)", transition: "background 0.15s" }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--row-hover)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
-      {/* Name */}
-      <td style={{ padding: "13px 16px", fontSize: "14px", fontWeight: 600, color: "#2D3748", whiteSpace: "nowrap" }}>
+      <td style={{ padding: "13px 16px", fontSize: "14px", fontWeight: 600, color: "var(--foreground)", whiteSpace: "nowrap" }}>
         {item.itemName}
       </td>
-
-      {/* Category */}
       <td style={{ padding: "13px 16px" }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: "6px",
-          padding: "3px 10px", borderRadius: "20px",
-          fontSize: "12px", fontWeight: 600,
-          background: categoryColor ? `${categoryColor}22` : "#EBF4FF",
-          color: categoryColor || "#4A6FA5",
-          border: `1px solid ${categoryColor ? `${categoryColor}55` : "#BED3F3"}`,
+          padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600,
+          background: categoryColor ? `${categoryColor}22` : "var(--btn-edit-bg)",
+          color: categoryColor || "var(--brand)",
+          border: `1px solid ${categoryColor ? `${categoryColor}55` : "var(--btn-edit-border)"}`,
         }}>
-          <span style={{
-            width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0,
-            background: categoryColor || "#4A6FA5",
-          }} />
+          <span style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: categoryColor || "var(--brand)" }} />
           {categoryName}
         </span>
       </td>
-
-      {/* Quantity */}
       <td style={{ padding: "13px 16px" }}>
         <QuantityAdjuster itemId={item.id} currentQty={Number(item.quantity)} />
       </td>
-
-      {/* Unit — inline dropdown */}
       <td style={{ padding: "8px 16px", minWidth: "160px", maxWidth: "200px" }}>
-        <UnitDropdown
-          value={unitLabel}
-          onChange={saveUnit}
-          unitSystem={unitSystem}
-          placeholder="Set unit…"
-          inputStyle={{ fontSize: "13px", padding: "6px 10px" }}
-        />
+        <UnitDropdown value={unitLabel} onChange={saveUnit} unitSystem={unitSystem} placeholder="Set unit…" inputStyle={{ fontSize: "13px", padding: "6px 10px" }} />
       </td>
-
-      {/* Threshold */}
       <td style={{ padding: "13px 16px", fontSize: "13px", textAlign: "center" }}>
         {Number(item.lowThreshold) > 0
-          ? <span style={{ fontWeight: 600, color: Number(item.quantity) <= Number(item.lowThreshold) ? "#ea580c" : "#4A5568" }}>
+          ? <span style={{ fontWeight: 600, color: Number(item.quantity) <= Number(item.lowThreshold) ? "var(--alert-soon-text)" : "var(--text-body)" }}>
               {Number(item.lowThreshold)}
             </span>
-          : <span style={{ color: "#A0AEC0", fontStyle: "italic" }}>—</span>
+          : <span style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>—</span>
         }
       </td>
-
-      {/* Expiration Date */}
       <td style={{ padding: "13px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <input
@@ -395,24 +289,20 @@ function PantryRow({
               queryClient.invalidateQueries({ queryKey: ["pantry", sessionEmail] });
             }}
             style={{
-              border: "1px solid #E2E8F0", borderRadius: "8px",
-              padding: "5px 8px", fontSize: "12px", color: "#2D3748",
-              background: "#fff", outline: "none", cursor: "pointer",
+              border: "1px solid var(--input-border)", borderRadius: "8px",
+              padding: "5px 8px", fontSize: "12px", color: "var(--input-color)",
+              background: "var(--input-bg)", outline: "none", cursor: "pointer",
             }}
           />
           {badge && (
             <span style={{
               padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700,
-              background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`,
-              whiteSpace: "nowrap",
-            }}>
-              {badge.label}
-            </span>
+              background: `var(${badge.bgVar})`, color: `var(${badge.colorVar})`,
+              border: `1px solid var(${badge.borderVar})`, whiteSpace: "nowrap",
+            }}>{badge.label}</span>
           )}
         </div>
       </td>
-
-      {/* Actions */}
       <td style={{ padding: "13px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
           <button
@@ -420,20 +310,20 @@ function PantryRow({
             title="Edit item"
             style={{
               padding: "5px 12px", borderRadius: "7px", fontSize: "12px", fontWeight: 600,
-              background: "#EBF4FF", color: "#4A6FA5", border: "1px solid #BED3F3",
-              cursor: "pointer", transition: "all 0.15s",
+              background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)",
+              border: "1px solid var(--btn-edit-border)", cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "#4A6FA5";
+              (e.currentTarget as HTMLElement).style.background = "var(--brand)";
               (e.currentTarget as HTMLElement).style.color = "#fff";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "#EBF4FF";
-              (e.currentTarget as HTMLElement).style.color = "#4A6FA5";
+              (e.currentTarget as HTMLElement).style.background = "var(--btn-edit-bg)";
+              (e.currentTarget as HTMLElement).style.color = "var(--btn-edit-color)";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--btn-edit-border)";
             }}
-          >
-            Edit
-          </button>
+          >Edit</button>
           <DeleteButton itemId={item.id} />
         </div>
       </td>
@@ -444,8 +334,8 @@ function PantryRow({
 // ─── Sort Icon ────────────────────────────────────────────────────────────────
 
 function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
-  if (sortField !== field) return <span style={{ color: "#D1D5DB", marginLeft: "4px" }}>↕</span>;
-  return <span style={{ color: "#4A6FA5", marginLeft: "4px" }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
+  if (sortField !== field) return <span style={{ color: "var(--border)", marginLeft: "4px" }}>↕</span>;
+  return <span style={{ color: "var(--brand)", marginLeft: "4px" }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -483,9 +373,7 @@ export default function PantryPage() {
     if (!Array.isArray(data)) return [];
     return data.flatMap((cat: any) =>
       (cat.items || []).map((item: any) => ({
-        ...item,
-        categoryName: cat.name ?? "Uncategorized",
-        categoryColor: cat.color ?? null,
+        ...item, categoryName: cat.name ?? "Uncategorized", categoryColor: cat.color ?? null,
       }))
     );
   }, [data]);
@@ -527,17 +415,17 @@ export default function PantryPage() {
   if (status === "loading" || isLoading || catsLoading) {
     return (
       <AppShell>
-        <div style={{ padding: "48px", textAlign: "center", color: "#4A5568" }}>Loading pantry...</div>
+        <div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading pantry...</div>
       </AppShell>
     );
   }
 
   const thStyle = (field: SortField): React.CSSProperties => ({
-    padding: "12px 16px", fontSize: "12px", fontWeight: 700, color: "#4A5568",
+    padding: "12px 16px", fontSize: "12px", fontWeight: 700, color: "var(--text-body)",
     textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left",
     cursor: "pointer", whiteSpace: "nowrap", userSelect: "none",
-    background: sortField === field ? "#F0F4FF" : "#F7FAFC",
-    borderBottom: "2px solid #E2E8F0",
+    background: sortField === field ? "var(--th-bg-active)" : "var(--th-bg)",
+    borderBottom: "2px solid var(--th-border)",
   });
 
   return (
@@ -547,13 +435,17 @@ export default function PantryPage() {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
           <div>
-            <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#2D3748", margin: 0 }}>Pantry Inventory</h1>
-            <p style={{ color: "#4A5568", marginTop: "6px", fontSize: "15px" }}>
+            <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Pantry Inventory</h1>
+            <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
               {filteredSorted.length} of {allItems.length} item{allItems.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-            <Link href="/scan" style={{ padding: "10px 18px", borderRadius: "10px", background: "#EBF4FF", color: "#4A6FA5", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid #BED3F3" }}>
+            <Link href="/scan" style={{
+              padding: "10px 18px", borderRadius: "10px", background: "var(--btn-edit-bg)",
+              color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px",
+              textDecoration: "none", border: "1px solid var(--btn-edit-border)",
+            }}>
               📷 Scan Barcode
             </Link>
             <AddItemForm categories={categories || []} unitSystem={unitSystem} />
@@ -568,16 +460,16 @@ export default function PantryPage() {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               flex: "1", minWidth: "200px", maxWidth: "360px", padding: "9px 14px",
-              border: "1px solid #E2E8F0", borderRadius: "10px",
-              fontSize: "14px", color: "#2D3748", background: "#fff", outline: "none",
+              border: "1px solid var(--input-border)", borderRadius: "10px",
+              fontSize: "14px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none",
             }}
           />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             style={{
-              padding: "9px 14px", border: "1px solid #E2E8F0", borderRadius: "10px",
-              fontSize: "14px", color: "#2D3748", background: "#fff", outline: "none", cursor: "pointer",
+              padding: "9px 14px", border: "1px solid var(--input-border)", borderRadius: "10px",
+              fontSize: "14px", color: "var(--input-color)", background: "var(--input-bg)", outline: "none", cursor: "pointer",
             }}
           >
             <option value="all">All Categories</option>
@@ -588,7 +480,10 @@ export default function PantryPage() {
         </div>
 
         {/* Table */}
-        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #E2E8F0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+        <div style={{
+          background: "var(--card-bg)", borderRadius: "14px",
+          border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)", overflow: "hidden",
+        }}>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
               <thead>
@@ -611,7 +506,7 @@ export default function PantryPage() {
                   <th style={thStyle("expirationDate")} onClick={() => handleSort("expirationDate")}>
                     Expiration Date <SortIcon field="expirationDate" sortField={sortField} sortDir={sortDir} />
                   </th>
-                  <th style={{ ...thStyle("itemName" as SortField), cursor: "default", textAlign: "center", background: "#F7FAFC" }}>
+                  <th style={{ ...thStyle("itemName" as SortField), cursor: "default", textAlign: "center" }}>
                     Actions
                   </th>
                 </tr>
@@ -620,19 +515,15 @@ export default function PantryPage() {
                 {filteredSorted.length > 0 ? (
                   filteredSorted.map((item: any) => (
                     <PantryRow
-                      key={item.id}
-                      item={item}
-                      categoryName={item.categoryName}
-                      categoryColor={item.categoryColor}
-                      categories={categories || []}
-                      sessionEmail={session?.user?.email}
-                      unitSystem={unitSystem}
-                      onEdit={setEditingItem}
+                      key={item.id} item={item}
+                      categoryName={item.categoryName} categoryColor={item.categoryColor}
+                      categories={categories || []} sessionEmail={session?.user?.email}
+                      unitSystem={unitSystem} onEdit={setEditingItem}
                     />
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "#A0AEC0", fontSize: "14px" }}>
+                    <td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
                       {allItems.length === 0 ? "Your pantry is empty — add your first item!" : "No items match your search."}
                     </td>
                   </tr>
@@ -644,17 +535,17 @@ export default function PantryPage() {
           {/* Table footer */}
           {filteredSorted.length > 0 && (
             <div style={{
-              padding: "12px 20px", borderTop: "1px solid #E2E8F0",
-              background: "#F7FAFC", display: "flex", gap: "20px",
-              fontSize: "12px", color: "#A0AEC0",
+              padding: "12px 20px", borderTop: "1px solid var(--border)",
+              background: "var(--surface-subtle)", display: "flex", gap: "20px",
+              fontSize: "12px", color: "var(--text-secondary)",
             }}>
               <span>{filteredSorted.length} item{filteredSorted.length !== 1 ? "s" : ""}</span>
               <span>·</span>
-              <span style={{ color: "#ea580c" }}>
+              <span style={{ color: "var(--alert-soon-text)" }}>
                 {filteredSorted.filter((i: any) => Number(i.quantity) <= Number(i.lowThreshold) && Number(i.lowThreshold) > 0).length} low stock
               </span>
               <span>·</span>
-              <span style={{ color: "#dc2626" }}>
+              <span style={{ color: "var(--alert-expired-text)" }}>
                 {filteredSorted.filter((i: any) => {
                   if (!i.expirationDate) return false;
                   const today = new Date(); today.setHours(0,0,0,0);
@@ -669,9 +560,7 @@ export default function PantryPage() {
       {/* Edit Modal */}
       {editingItem && (
         <EditItemModal
-          item={editingItem}
-          categories={categories || []}
-          unitSystem={unitSystem}
+          item={editingItem} categories={categories || []} unitSystem={unitSystem}
           onClose={() => setEditingItem(null)}
           onSaved={() => queryClient.invalidateQueries({ queryKey: ["pantry", session?.user?.email] })}
         />

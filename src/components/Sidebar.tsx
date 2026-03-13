@@ -91,7 +91,11 @@ interface SidebarProps {
 export default function Sidebar({ open, isMobile, onToggle, onNavClick }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { theme, toggle } = useTheme();
+  const { theme } = useTheme();
+
+  const sidebarBg = theme === "midnight"
+    ? "linear-gradient(180deg, #0a0a0a 0%, #141414 60%, #1a1a1a 100%)"
+    : "linear-gradient(180deg, #2D3748 0%, #3a4a60 60%, #4A6FA5 100%)";
 
   // On desktop the sidebar is always visible; on mobile it slides in/out
   const isVisible = !isMobile || open;
@@ -101,7 +105,7 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
       style={{
         width: "240px",
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #2D3748 0%, #3a4a60 60%, #4A6FA5 100%)",
+        background: sidebarBg,
         display: "flex",
         flexDirection: "column",
         position: "fixed",
@@ -217,53 +221,11 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
             background: "rgba(239,68,68,0.15)", color: "#fca5a5",
             border: "1px solid rgba(239,68,68,0.25)", fontSize: "13px",
             fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
-            marginBottom: "8px",
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.3)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)"; }}
         >
           Sign Out
-        </button>
-
-        {/* Theme Toggle */}
-        <button
-          onClick={toggle}
-          style={{
-            width: "100%", padding: "9px 14px", borderRadius: "10px",
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.75)", fontSize: "13px",
-            fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.15)";
-            (e.currentTarget as HTMLElement).style.color = "#fff";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
-            (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)";
-          }}
-        >
-          {theme === "light" ? (
-            <>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-              Dark Mode
-            </>
-          ) : (
-            <>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-              Light Mode
-            </>
-          )}
         </button>
       </div>
     </aside>

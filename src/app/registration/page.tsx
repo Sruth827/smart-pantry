@@ -4,14 +4,11 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        password: '',
-    });
+    const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -19,31 +16,23 @@ export default function RegisterPage() {
         e.preventDefault();
         setLoading(true);
         setError('');
-
         try {
             const res = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
-
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.error || 'Registration failed');
             }
-
-            // SUCCESS: Auto-login the user
             const loginRes = await signIn('credentials', {
                 redirect: false,
                 email: formData.email,
                 password: formData.password,
             });
-
-            if (loginRes?.error) {
-                router.push('/login'); // Fallback if auto-login fails
-            } else {
-                router.push('/dashboard');
-            }
+            if (loginRes?.error) router.push('/login');
+            else router.push('/dashboard');
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -51,73 +40,119 @@ export default function RegisterPage() {
         }
     };
 
+    const inputStyle: React.CSSProperties = {
+        width: '100%', padding: '10px 14px',
+        border: '1px solid var(--input-border)',
+        borderRadius: '10px', fontSize: '14px',
+        color: 'var(--input-color)', background: 'var(--input-bg)',
+        outline: 'none', boxSizing: 'border-box',
+    };
+
+    const labelStyle: React.CSSProperties = {
+        display: 'block', fontSize: '12px', fontWeight: 700,
+        color: 'var(--text-body)', marginBottom: '5px',
+        textTransform: 'uppercase', letterSpacing: '0.04em',
+    };
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F5F0EB] px-4">
-            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                <div className="text-center">
-                    <h2 className="text-3xl font-extrabold text-[#4A6FA5]">ShelfControl</h2>
-                    <p className="mt-2 text-sm text-[#4A5568]">Create your smart pantry account</p>
+        <div style={{
+            minHeight: '100vh', background: 'var(--background)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+        }}>
+            <div style={{
+                width: '100%', maxWidth: '420px',
+                background: 'var(--card-bg)', borderRadius: '20px',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.15)',
+                border: '1px solid var(--card-border)', overflow: 'hidden',
+            }}>
+                {/* Logo section */}
+                <div style={{
+                    background: '#2D3748', padding: '36px 32px 28px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                    <Image src="/Logo_Bottom.png" alt="PantryMonium" width={200} height={200} style={{ objectFit: 'contain' }} priority />
                 </div>
 
-                {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm text-center border border-red-100">
-                        {error}
-                    </div>
-                )}
+                {/* Form section */}
+                <div style={{ padding: '32px' }}>
+                    <h1 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--foreground)', margin: '0 0 6px' }}>
+                        Create an account
+                    </h1>
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 24px' }}>
+                        Set up your smart pantry in seconds.
+                    </p>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm space-y-4">
+                    {error && (
+                        <div style={{
+                            padding: '10px 14px', borderRadius: '8px', marginBottom: '16px',
+                            background: 'var(--alert-expired-bg)', border: '1px solid var(--alert-expired-border)',
+                            color: 'var(--alert-expired-text)', fontSize: '13px',
+                        }}>
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                         <div>
-                            <label className="block text-sm font-medium text-[#2D3748]">Full Name</label>
+                            <label style={labelStyle}>Full Name</label>
                             <input
-                                type="text"
-                                required
-                                className="appearance-none relative block w-full px-3 py-2 border border-[#E2E8F0] placeholder-[#A0AEC0] text-[#2D3748] rounded-md focus:outline-none focus:ring-[#4A6FA5] focus:border-[#4A6FA5] sm:text-sm"
-                                placeholder="John Doe"
+                                type="text" required placeholder="John Doe"
                                 value={formData.fullName}
-                                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                style={inputStyle}
+                                onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                                onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)'; }}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-[#2D3748]">Email Address</label>
+                            <label style={labelStyle}>Email Address</label>
                             <input
-                                type="email"
-                                required
-                                className="appearance-none relative block w-full px-3 py-2 border border-[#E2E8F0] placeholder-[#A0AEC0] text-[#2D3748] rounded-md focus:outline-none focus:ring-[#4A6FA5] focus:border-[#4A6FA5] sm:text-sm"
-                                placeholder="your@email.here"
+                                type="email" required placeholder="you@example.com"
                                 value={formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                style={inputStyle}
+                                onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                                onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)'; }}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-[#2D3748]">Password</label>
+                            <label style={labelStyle}>Password</label>
                             <input
-                                type="password"
-                                required
-                                className="appearance-none relative block w-full px-3 py-2 border border-[#E2E8F0] placeholder-[#A0AEC0] text-[#2D3748] rounded-md focus:outline-none focus:ring-[#4A6FA5] focus:border-[#4A6FA5] sm:text-sm"
-                                placeholder="••••••••"
+                                type="password" required placeholder="••••••••"
                                 value={formData.password}
-                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                style={inputStyle}
+                                onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+                                onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)'; }}
                             />
                         </div>
-                    </div>
 
-                    <div>
                         <button
-                            type="submit"
-                            disabled={loading}
-                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#4A6FA5] hover:bg-[#3d5c8a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4A6FA5] ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            type="submit" disabled={loading}
+                            style={{
+                                marginTop: '6px', width: '100%', padding: '12px',
+                                borderRadius: '10px', fontSize: '15px', fontWeight: 700,
+                                background: loading ? '#93b4d4' : 'var(--brand)',
+                                color: '#fff', border: 'none',
+                                cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#3d5c8a'; }}
+                            onMouseLeave={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--brand)'; }}
                         >
                             {loading ? 'Creating Account...' : 'Sign Up'}
                         </button>
-                    </div>
+                    </form>
 
-                    <div className="text-sm text-center">
-                        <Link href="/login" className="font-medium text-[#4A6FA5] hover:text-[#3d5c8a]">
-                            Already have an account? Sign in
+                    <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        Already have an account?{' '}
+                        <Link href="/login" style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.textDecoration = 'underline'; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.textDecoration = 'none'; }}
+                        >
+                            Sign in
                         </Link>
-                    </div>
-                </form>
+                    </p>
+                </div>
             </div>
         </div>
     );

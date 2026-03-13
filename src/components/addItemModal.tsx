@@ -28,94 +28,118 @@ export default function AddItemForm({
     }
   }, [state]);
 
-return (
+  const inputCls: React.CSSProperties = {
+    width: "100%", border: "1px solid var(--input-border)", borderRadius: "6px",
+    padding: "8px 10px", fontSize: "14px", color: "var(--input-color)",
+    background: "var(--input-bg)", outline: "none", boxSizing: "border-box",
+  };
+
+  const labelCls: React.CSSProperties = {
+    display: "block", fontSize: "13px", fontWeight: 600,
+    color: "var(--text-body)", marginBottom: "4px",
+  };
+
+  return (
     <>
-      {/* 1. The Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all"
+        style={{
+          padding: "10px 18px", borderRadius: "10px", background: "var(--brand)",
+          color: "#fff", fontWeight: 600, fontSize: "14px", border: "none", cursor: "pointer",
+        }}
       >
         + Add Item Manually
       </button>
 
-      {/* 2. The Modal Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            
+        <div
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 50,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--card-bg)", borderRadius: "14px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+              width: "100%", maxWidth: "440px", overflow: "hidden",
+              border: "1px solid var(--card-border)",
+              animation: "modalIn 0.18s ease",
+            }}
+          >
             {/* Header */}
-            <div className="p-6 border-b flex justify-between items-center bg-[#F7FAFC]">
-              <h3 className="text-xl font-bold text-[#2D3748]">New Pantry Item</h3>
-              <button onClick={() => setIsOpen(false)} className="text-[#A0AEC0] hover:text-[#4A5568]">✕</button>
+            <div style={{
+              padding: "20px 24px 16px", borderBottom: "1px solid var(--border)",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              background: "var(--surface-subtle)",
+            }}>
+              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800, color: "var(--foreground)" }}>New Pantry Item</h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px" }}
+              >✕</button>
             </div>
 
             {/* Form Body */}
-            <form action={formAction} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">Item Name</label>
-                <input name="itemName" required className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-500 text-black outline-none" placeholder="e.g. Whole Milk" />
+            <form action={formAction} style={{ padding: "20px 24px" }}>
+              <div style={{ marginBottom: "14px" }}>
+                <label style={labelCls}>Item Name</label>
+                <input name="itemName" required style={inputCls} placeholder="e.g. Whole Milk" />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">Shelf / Category</label>
-                <select 
-                  name="categoryId" 
-                  className="w-full border rounded-md p-2 outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                >
-                <option value="">-- No Category --</option>
+              <div style={{ marginBottom: "14px" }}>
+                <label style={labelCls}>Shelf / Category</label>
+                <select name="categoryId" style={{ ...inputCls, cursor: "pointer" }}>
+                  <option value="">-- No Category --</option>
                   {categories.map((cat: any) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.color ? `● ${cat.name}` : cat.name}
-                    </option>
+                    <option key={cat.id} value={cat.id}>{cat.color ? `● ${cat.name}` : cat.name}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Quantity</label>
-                  <input name="quantity" type="number" step="0.1" defaultValue="1" className="w-full border rounded-md p-2 text-black" />
+                  <label style={labelCls}>Quantity</label>
+                  <input name="quantity" type="number" step="0.1" defaultValue="1" style={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Unit</label>
-                  {/* Hidden input carries the value into FormData */}
+                  <label style={labelCls}>Unit</label>
                   <input type="hidden" name="unitLabel" value={unitLabel} />
-                  <UnitDropdown
-                    value={unitLabel}
-                    onChange={setUnitLabel}
-                    unitSystem={unitSystem}
-                    placeholder="Select unit…"
-                    inputStyle={{ fontSize: "14px", padding: "8px 10px", borderRadius: "6px" }}
-                  />
+                  <UnitDropdown value={unitLabel} onChange={setUnitLabel} unitSystem={unitSystem} placeholder="Select unit…" inputStyle={{ fontSize: "14px", padding: "8px 10px", borderRadius: "6px" }} />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">Expiration Date</label>
-                <input type="date" name="expirationDate" className="w-full border rounded-md p-2 text-black" />
+
+              <div style={{ marginBottom: "14px" }}>
+                <label style={labelCls}>Expiration Date</label>
+                <input type="date" name="expirationDate" style={inputCls} />
               </div>
 
-              {state?.error && <p className="text-red-500 text-sm italic">{state.error}</p>}
+              {state?.error && <p style={{ color: "var(--alert-expired-text)", fontSize: "13px", fontStyle: "italic", marginBottom: "10px" }}>{state.error}</p>}
 
-              <div className="pt-4 flex gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 px-4 py-2 border rounded-md text-[#4A5568] hover:bg-[#F7FAFC]"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={isPending}
-                  className="flex-1 bg-[#4A6FA5] text-white px-4 py-2 rounded-md hover:bg-[#3d5c8a] disabled:opacity-50"
-                >
-                  {isPending ? "Saving..." : "Save Item"}
-                </button>
+              <div style={{ display: "flex", gap: "10px", paddingTop: "8px" }}>
+                <button
+                  type="button" onClick={() => setIsOpen(false)}
+                  style={{ flex: 1, padding: "9px 16px", borderRadius: "8px", border: "1px solid var(--btn-cancel-border)", background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)", fontWeight: 500, cursor: "pointer", fontSize: "14px" }}
+                >Cancel</button>
+                <button
+                  type="submit" disabled={isPending}
+                  style={{ flex: 1, padding: "9px 16px", borderRadius: "8px", border: "none", background: "var(--brand)", color: "#fff", fontWeight: 700, cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.6 : 1, fontSize: "14px" }}
+                >{isPending ? "Saving..." : "Save Item"}</button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.96) translateY(8px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
     </>
   );
 }

@@ -79,28 +79,28 @@ export default function RecipesPage() {
   };
 
   if (status === "loading" || isLoading) {
-    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "#4A5568" }}>Loading...</div></AppShell>;
+    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading...</div></AppShell>;
   }
 
   return (
     <AppShell>
       <div style={{ padding: "40px 48px" }}>
         <div style={{ marginBottom: "32px" }}>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#2D3748", margin: 0 }}>Recipes</h1>
-          <p style={{ color: "#4A5568", marginTop: "6px", fontSize: "15px" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Recipes</h1>
+          <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
             Discover recipes you can make with your pantry ingredients.
           </p>
         </div>
 
         {/* Pantry summary + Search */}
-        <div style={{ background: "#fff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0", marginBottom: "24px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div style={{ background: "var(--card-bg)", borderRadius: "14px", padding: "24px", border: "1px solid var(--border)", marginBottom: "24px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
             <div>
-              <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", margin: 0 }}>Your Pantry Ingredients</h2>
-              <p style={{ color: "#4A5568", fontSize: "13px", marginTop: "4px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--foreground)", margin: 0 }}>Your Pantry Ingredients</h2>
+              <p style={{ color: "var(--text-body)", fontSize: "13px", marginTop: "4px" }}>
                 {activeItems.length} of {allItems.length} items will be matched against Spoonacular recipes.
                 {excludedItems.size > 0 && (
-                  <span style={{ color: "#E07B54", fontWeight: 600 }}> ({excludedItems.size} excluded)</span>
+                  <span style={{ color: "var(--accent)", fontWeight: 600 }}> ({excludedItems.size} excluded)</span>
                 )}
               </p>
             </div>
@@ -110,10 +110,10 @@ export default function RecipesPage() {
                 disabled={allItems.length === 0}
                 style={{
                   padding: "10px 18px", borderRadius: "10px",
-                  background: excludedItems.size > 0 ? "#FFF3ED" : "#F7FAFC",
-                  color: excludedItems.size > 0 ? "#C05621" : "#4A5568",
+                  background: excludedItems.size > 0 ? "var(--alert-soon-bg)" : "var(--surface-subtle)",
+                  color: excludedItems.size > 0 ? "var(--alert-soon-text)" : "var(--text-body)",
                   fontWeight: 700, fontSize: "14px",
-                  border: excludedItems.size > 0 ? "1px solid #F6AD55" : "1px solid #e2e8f0",
+                  border: excludedItems.size > 0 ? "1px solid var(--alert-soon-border)" : "1px solid var(--border)",
                   cursor: allItems.length === 0 ? "not-allowed" : "pointer",
                   opacity: allItems.length === 0 ? 0.5 : 1,
                   display: "flex", alignItems: "center", gap: "6px",
@@ -125,7 +125,7 @@ export default function RecipesPage() {
                 onClick={searchRecipes}
                 disabled={searching || activeItems.length === 0}
                 style={{
-                  padding: "10px 24px", borderRadius: "10px", background: "#4A6FA5",
+                  padding: "10px 24px", borderRadius: "10px", background: "var(--brand)",
                   color: "#fff", fontWeight: 700, fontSize: "14px", border: "none",
                   cursor: activeItems.length === 0 ? "not-allowed" : "pointer",
                   opacity: activeItems.length === 0 ? 0.5 : 1,
@@ -139,15 +139,15 @@ export default function RecipesPage() {
             {allItems.slice(0, 20).map((item) => (
               <span key={item.id} style={{
                 padding: "4px 12px", borderRadius: "20px", fontSize: "12px",
-                background: excludedItems.has(item.itemName) ? "#F7FAFC" : "#F5EDE4",
-                color: excludedItems.has(item.itemName) ? "#A0AEC0" : "#A0724A",
-                border: `1px solid ${excludedItems.has(item.itemName) ? "#e2e8f0" : "#D4B49A"}`,
+                background: excludedItems.has(item.itemName) ? "var(--surface-subtle)" : "var(--accent-subtle, #F5EDE4)",
+                color: excludedItems.has(item.itemName) ? "var(--text-secondary)" : "#A0724A",
+                border: `1px solid ${excludedItems.has(item.itemName) ? "var(--border)" : "var(--accent-border, #D4B49A)"}`,
                 fontWeight: 500,
                 textDecoration: excludedItems.has(item.itemName) ? "line-through" : "none",
               }}>{item.itemName}</span>
             ))}
             {allItems.length > 20 && (
-              <span style={{ padding: "4px 12px", borderRadius: "20px", fontSize: "12px", background: "#F7FAFC", color: "#A0AEC0" }}>
+              <span style={{ padding: "4px 12px", borderRadius: "20px", fontSize: "12px", background: "var(--surface-subtle)", color: "var(--text-secondary)" }}>
                 +{allItems.length - 20} more
               </span>
             )}
@@ -161,15 +161,15 @@ export default function RecipesPage() {
             onClick={() => setShowFilterPopup(false)}
           >
             <div
-              style={{ background: "#fff", borderRadius: "18px", maxWidth: "480px", width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}
+              style={{ background: "var(--card-bg)", borderRadius: "18px", maxWidth: "480px", width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ padding: "24px 24px 16px", borderBottom: "1px solid #e2e8f0" }}>
+              <div style={{ padding: "24px 24px 16px", borderBottom: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#2D3748", margin: 0 }}>Exclude Ingredients</h2>
-                  <button onClick={() => setShowFilterPopup(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#A0AEC0" }}>&#x2715;</button>
+                  <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Exclude Ingredients</h2>
+                  <button onClick={() => setShowFilterPopup(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-secondary)" }}>&#x2715;</button>
                 </div>
-                <p style={{ color: "#718096", fontSize: "13px", margin: "0 0 14px" }}>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "0 0 14px" }}>
                   Select items you <strong>don&apos;t</strong> want included in your recipe search.
                 </p>
                 <input
@@ -179,14 +179,14 @@ export default function RecipesPage() {
                   onChange={(e) => setFilterSearch(e.target.value)}
                   style={{
                     width: "100%", padding: "9px 14px", borderRadius: "8px",
-                    border: "1px solid #CBD5E0", fontSize: "14px", outline: "none",
-                    boxSizing: "border-box", color: "#2D3748",
+                    border: "1px solid var(--border)", fontSize: "14px", outline: "none",
+                    boxSizing: "border-box", color: "var(--input-color)", background: "var(--input-bg)",
                   }}
                 />
               </div>
               <div style={{ overflowY: "auto", flex: 1, padding: "12px 24px" }}>
                 {filteredPopupItems.length === 0 ? (
-                  <p style={{ color: "#A0AEC0", fontSize: "14px", textAlign: "center", padding: "24px 0" }}>No items match your search.</p>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "14px", textAlign: "center", padding: "24px 0" }}>No items match your search.</p>
                 ) : (
                   filteredPopupItems.map((item) => {
                     const excluded = excludedItems.has(item.itemName);
@@ -197,22 +197,22 @@ export default function RecipesPage() {
                         style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           padding: "10px 14px", borderRadius: "10px", marginBottom: "6px",
-                          background: excluded ? "#FFF3ED" : "#F7FAFC",
-                          border: `1px solid ${excluded ? "#F6AD55" : "#e2e8f0"}`,
+                          background: excluded ? "var(--alert-soon-bg)" : "var(--surface-subtle)",
+                          border: `1px solid ${excluded ? "var(--alert-soon-border)" : "var(--border)"}`,
                           cursor: "pointer", transition: "all 0.15s",
                         }}
                       >
                         <span style={{
                           fontSize: "14px", fontWeight: 500,
-                          color: excluded ? "#C05621" : "#2D3748",
+                          color: excluded ? "var(--alert-soon-text)" : "var(--foreground)",
                           textDecoration: excluded ? "line-through" : "none",
                         }}>
                           {item.itemName}
                         </span>
                         <div style={{
                           width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0,
-                          background: excluded ? "#C05621" : "#fff",
-                          border: `2px solid ${excluded ? "#C05621" : "#CBD5E0"}`,
+                          background: excluded ? "var(--alert-soon-text)" : "var(--card-bg)",
+                          border: `2px solid ${excluded ? "var(--alert-soon-text)" : "var(--border)"}`,
                           display: "flex", alignItems: "center", justifyContent: "center",
                         }}>
                           {excluded && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>&#x2715;</span>}
@@ -222,13 +222,13 @@ export default function RecipesPage() {
                   })
                 )}
               </div>
-              <div style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+              <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
                 <button
                   onClick={() => setExcludedItems(new Set())}
                   disabled={excludedItems.size === 0}
                   style={{
-                    padding: "9px 16px", borderRadius: "8px", border: "1px solid #e2e8f0",
-                    background: "#fff", color: "#718096", fontSize: "13px", fontWeight: 600,
+                    padding: "9px 16px", borderRadius: "8px", border: "1px solid var(--border)",
+                    background: "var(--card-bg)", color: "var(--text-secondary)", fontSize: "13px", fontWeight: 600,
                     cursor: excludedItems.size === 0 ? "not-allowed" : "pointer",
                     opacity: excludedItems.size === 0 ? 0.5 : 1,
                   }}
@@ -238,7 +238,7 @@ export default function RecipesPage() {
                 <button
                   onClick={() => setShowFilterPopup(false)}
                   style={{
-                    padding: "9px 24px", borderRadius: "8px", background: "#4A6FA5",
+                    padding: "9px 24px", borderRadius: "8px", background: "var(--brand)",
                     color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer",
                   }}
                 >
@@ -250,7 +250,7 @@ export default function RecipesPage() {
         )}
 
         {error && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "16px", marginBottom: "16px", color: "#dc2626", fontSize: "14px" }}>
+          <div style={{ background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)", borderRadius: "10px", padding: "16px", marginBottom: "16px", color: "var(--alert-expired-text)", fontSize: "14px" }}>
             {error}
           </div>
         )}
@@ -258,7 +258,7 @@ export default function RecipesPage() {
         {/* Recipe Grid */}
         {recipes.length > 0 && (
           <>
-            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#2D3748", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--foreground)", marginBottom: "16px" }}>
               {recipes.length} Recipes Found
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
@@ -267,7 +267,7 @@ export default function RecipesPage() {
                   key={recipe.id}
                   onClick={() => viewRecipe(recipe)}
                   style={{
-                    background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0",
+                    background: "var(--card-bg)", borderRadius: "14px", border: "1px solid var(--border)",
                     overflow: "hidden", cursor: "pointer", transition: "all 0.2s",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                   }}
@@ -284,20 +284,20 @@ export default function RecipesPage() {
                     <img src={recipe.image} alt={recipe.title} style={{ width: "100%", height: "160px", objectFit: "cover" }} />
                   )}
                   <div style={{ padding: "16px" }}>
-                    <h3 style={{ fontWeight: 700, fontSize: "15px", color: "#2D3748", margin: "0 0 8px" }}>{recipe.title}</h3>
+                    <h3 style={{ fontWeight: 700, fontSize: "15px", color: "var(--foreground)", margin: "0 0 8px" }}>{recipe.title}</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{
                         padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600,
-                        background: recipe.usedIngredientCount >= 3 ? "#F5EDE4" : "#fff7ed",
-                        color: recipe.usedIngredientCount >= 3 ? "#A0724A" : "#ea580c",
-                        border: `1px solid ${recipe.usedIngredientCount >= 3 ? "#D4B49A" : "#fed7aa"}`,
+                        background: recipe.usedIngredientCount >= 3 ? "var(--accent-subtle)" : "var(--alert-soon-bg)",
+                        color: recipe.usedIngredientCount >= 3 ? "var(--accent)" : "var(--alert-soon-text)",
+                        border: `1px solid ${recipe.usedIngredientCount >= 3 ? "var(--accent-border)" : "var(--alert-soon-border)"}`,
                       }}>
                         ✓ {recipe.usedIngredientCount} from pantry
                       </span>
                       {recipe.missedIngredientCount > 0 && (
                         <span style={{
                           padding: "4px 10px", borderRadius: "20px", fontSize: "12px",
-                          background: "#F7FAFC", color: "#A0AEC0", border: "1px solid #e2e8f0",
+                          background: "var(--surface-subtle)", color: "var(--text-secondary)", border: "1px solid var(--border)",
                         }}>
                           {recipe.missedIngredientCount} missing
                         </span>
@@ -311,10 +311,10 @@ export default function RecipesPage() {
         )}
 
         {searched && recipes.length === 0 && !error && !searching && (
-          <div style={{ background: "#fff", borderRadius: "16px", padding: "48px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "48px", textAlign: "center", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🍽️</div>
-            <h2 style={{ color: "#2D3748", fontWeight: 700 }}>No recipes found</h2>
-            <p style={{ color: "#4A5568" }}>Try adding more items to your pantry.</p>
+            <h2 style={{ color: "var(--foreground)", fontWeight: 700 }}>No recipes found</h2>
+            <p style={{ color: "var(--text-body)" }}>Try adding more items to your pantry.</p>
           </div>
         )}
 
@@ -325,7 +325,7 @@ export default function RecipesPage() {
             onClick={() => { setSelectedRecipe(null); setRecipeDetail(null); }}
           >
             <div
-              style={{ background: "#fff", borderRadius: "16px", maxWidth: "600px", width: "100%", maxHeight: "80vh", overflow: "auto" }}
+              style={{ background: "var(--card-bg)", borderRadius: "16px", maxWidth: "600px", width: "100%", maxHeight: "80vh", overflow: "auto" }}
               onClick={(e) => e.stopPropagation()}
             >
               {selectedRecipe.image && (
@@ -333,21 +333,21 @@ export default function RecipesPage() {
               )}
               <div style={{ padding: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                  <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#2D3748", margin: 0, flex: 1 }}>{selectedRecipe.title}</h2>
-                  <button onClick={() => { setSelectedRecipe(null); setRecipeDetail(null); }} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#A0AEC0", marginLeft: "12px" }}>✕</button>
+                  <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--foreground)", margin: 0, flex: 1 }}>{selectedRecipe.title}</h2>
+                  <button onClick={() => { setSelectedRecipe(null); setRecipeDetail(null); }} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-secondary)", marginLeft: "12px" }}>✕</button>
                 </div>
 
                 {loadingDetail ? (
-                  <p style={{ color: "#4A5568" }}>Loading recipe details...</p>
+                  <p style={{ color: "var(--text-body)" }}>Loading recipe details...</p>
                 ) : recipeDetail ? (
                   <>
                     {recipeDetail.readyInMinutes && (
-                      <p style={{ color: "#4A5568", fontSize: "14px", marginBottom: "16px" }}>
+                      <p style={{ color: "var(--text-body)", fontSize: "14px", marginBottom: "16px" }}>
                         ⏱️ Ready in {recipeDetail.readyInMinutes} minutes · 🍽️ Serves {recipeDetail.servings}
                       </p>
                     )}
                     <div style={{ marginBottom: "16px" }}>
-                      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", marginBottom: "8px" }}>Pantry Ingredients Used</h3>
+                      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--foreground)", marginBottom: "8px" }}>Pantry Ingredients Used</h3>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                         {selectedRecipe.usedIngredients?.map((ing: any) => (
                           <span key={ing.id} style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", background: "#F5EDE4", color: "#A0724A", border: "1px solid #D4B49A" }}>
@@ -358,10 +358,10 @@ export default function RecipesPage() {
                     </div>
                     {selectedRecipe.missedIngredients?.length > 0 && (
                       <div style={{ marginBottom: "16px" }}>
-                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", marginBottom: "8px" }}>Still Need</h3>
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--foreground)", marginBottom: "8px" }}>Still Need</h3>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {selectedRecipe.missedIngredients.map((ing: any) => (
-                            <span key={ing.id} style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", background: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" }}>
+                            <span key={ing.id} style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", background: "var(--alert-soon-bg)", color: "var(--alert-soon-text)", border: "1px solid var(--alert-soon-border)" }}>
                               {ing.original}
                             </span>
                           ))}
@@ -370,7 +370,7 @@ export default function RecipesPage() {
                     )}
                     {recipeDetail.sourceUrl && (
                       <a href={recipeDetail.sourceUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ display: "inline-block", marginTop: "8px", padding: "10px 20px", background: "#4A6FA5", color: "#fff", borderRadius: "10px", fontWeight: 600, fontSize: "14px", textDecoration: "none" }}>
+                        style={{ display: "inline-block", marginTop: "8px", padding: "10px 20px", background: "var(--brand)", color: "#fff", borderRadius: "10px", fontWeight: 600, fontSize: "14px", textDecoration: "none" }}>
                         View Full Recipe →
                       </a>
                     )}

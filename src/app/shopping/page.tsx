@@ -26,24 +26,24 @@ function ShoppingItem({
       style={{
         display: "flex", alignItems: "center", gap: "14px",
         padding: "13px 20px",
-        borderBottom: "1px solid #E2E8F0",
+        borderBottom: "1px solid var(--border)",
         cursor: "pointer",
         opacity: isChecked ? 0.45 : 1,
         transition: "opacity 0.15s, background 0.15s",
-        background: isChecked ? "#F7FAFC" : "#fff",
+        background: isChecked ? "var(--surface-subtle)" : "var(--card-bg)",
       }}
       onMouseEnter={(e) => {
-        if (!isChecked) (e.currentTarget as HTMLElement).style.background = "#F7FAFC";
+        if (!isChecked) (e.currentTarget as HTMLElement).style.background = "var(--surface-subtle)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.background = isChecked ? "#F7FAFC" : "#fff";
+        (e.currentTarget as HTMLElement).style.background = isChecked ? "var(--surface-subtle)" : "var(--card-bg)";
       }}
     >
       {/* Checkbox */}
       <div style={{
         width: "20px", height: "20px", borderRadius: "6px", flexShrink: 0,
-        border: `2px solid ${isChecked ? "#4A6FA5" : "#CBD5E0"}`,
-        background: isChecked ? "#4A6FA5" : "#fff",
+        border: `2px solid ${isChecked ? "var(--brand)" : "var(--border)"}`,
+        background: isChecked ? "var(--brand)" : "var(--card-bg)",
         display: "flex", alignItems: "center", justifyContent: "center",
         transition: "all 0.15s",
       }}>
@@ -57,21 +57,21 @@ function ShoppingItem({
       {/* Details */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontWeight: 600, fontSize: "14px", color: "#2D3748",
+          fontWeight: 600, fontSize: "14px", color: "var(--foreground)",
           textDecoration: isChecked ? "line-through" : "none",
           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
         }}>
           {item.itemName}
         </div>
-        <div style={{ fontSize: "12px", color: "#A0AEC0", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
           {/* Category dot */}
           <span style={{
             width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0,
-            background: categoryColor || "#A0AEC0",
+            background: categoryColor || "var(--text-secondary)",
             display: "inline-block",
           }} />
           <span>{item.categoryName}</span>
-          <span style={{ color: "#E2E8F0" }}>·</span>
+          <span style={{ color: "var(--border)" }}>·</span>
           <span>
             Has {Number(item.quantity)} {item.unitLabel || "units"} (min: {Number(item.lowThreshold)})
           </span>
@@ -82,7 +82,7 @@ function ShoppingItem({
       {!isChecked && (
         <span style={{
           padding: "3px 9px", borderRadius: "20px", fontSize: "11px", fontWeight: 700,
-          background: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa",
+          background: "var(--alert-soon-bg)", color: "var(--alert-soon-text)", border: "1px solid var(--alert-soon-border)",
           whiteSpace: "nowrap", flexShrink: 0,
         }}>
           LOW
@@ -125,7 +125,7 @@ export default function ShoppingPage() {
   if (status === "loading" || isLoading) {
     return (
       <AppShell>
-        <div style={{ padding: "48px", textAlign: "center", color: "#4A5568" }}>
+        <div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>
           Loading shopping list...
         </div>
       </AppShell>
@@ -187,8 +187,8 @@ export default function ShoppingPage() {
     border: "none",
     cursor: "pointer",
     transition: "all 0.15s",
-    background: active ? "#4A6FA5" : "transparent",
-    color: active ? "#fff" : "#4A5568",
+    background: active ? "var(--brand)" : "transparent",
+    color: active ? "#fff" : "var(--text-body)",
   });
 
   return (
@@ -197,10 +197,10 @@ export default function ShoppingPage() {
 
         {/* Header */}
         <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#2D3748", margin: 0 }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>
             Shopping List
           </h1>
-          <p style={{ color: "#4A5568", marginTop: "6px", fontSize: "15px" }}>
+          <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
             {allItems.length === 0
               ? "All stocked up — nothing needs restocking."
               : `${allItems.length} item${allItems.length !== 1 ? "s" : ""} below restock threshold.`}
@@ -209,21 +209,21 @@ export default function ShoppingPage() {
 
         {allItems.length === 0 ? (
           <div style={{
-            background: "#fff", borderRadius: "16px", padding: "56px 48px",
-            textAlign: "center", border: "1px solid #E2E8F0",
+            background: "var(--card-bg)", borderRadius: "16px", padding: "56px 48px",
+            textAlign: "center", border: "1px solid var(--border)",
             boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
           }}>
             <div style={{ fontSize: "52px", marginBottom: "16px" }}>🛒</div>
-            <h2 style={{ color: "#2D3748", fontWeight: 700, margin: "0 0 8px" }}>All stocked up!</h2>
-            <p style={{ color: "#718096", margin: 0 }}>No items are currently below their restock threshold.</p>
+            <h2 style={{ color: "var(--foreground)", fontWeight: 700, margin: "0 0 8px" }}>All stocked up!</h2>
+            <p style={{ color: "var(--text-secondary)", margin: 0 }}>No items are currently below their restock threshold.</p>
           </div>
         ) : (
           <>
             {/* ── View toggle ── */}
             <div style={{
               display: "inline-flex",
-              background: "#F7FAFC",
-              border: "1px solid #E2E8F0",
+              background: "var(--surface-subtle)",
+              border: "1px solid var(--border)",
               borderRadius: "10px",
               padding: "4px",
               marginBottom: "20px",
@@ -252,24 +252,24 @@ export default function ShoppingPage() {
             {/* ── Need to buy ── */}
             {unchecked.length > 0 && (
               <div style={{
-                background: "#fff", borderRadius: "14px",
-                border: "1px solid #E2E8F0", overflow: "hidden",
+                background: "var(--card-bg)", borderRadius: "14px",
+                border: "1px solid var(--border)", overflow: "hidden",
                 marginBottom: "16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
               }}>
                 {/* Section header */}
                 <div style={{
                   padding: "13px 20px",
-                  background: "#F7FAFC",
-                  borderBottom: "1px solid #E2E8F0",
+                  background: "var(--surface-subtle)",
+                  borderBottom: "1px solid var(--border)",
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <span style={{ fontWeight: 700, fontSize: "13px", color: "#2D3748", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Need to buy — {unchecked.length}
                   </span>
                   {checked.size > 0 && (
                     <button
                       onClick={() => setChecked(new Set())}
-                      style={{ fontSize: "12px", color: "#4A6FA5", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                      style={{ fontSize: "12px", color: "var(--brand)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
                     >
                       Clear all checks
                     </button>
@@ -294,17 +294,17 @@ export default function ShoppingPage() {
                     <div style={{
                       display: "flex", alignItems: "center", gap: "8px",
                       padding: "8px 20px",
-                      background: colorMap[catName] ? `${colorMap[catName]}18` : "#F0F4FF",
-                      borderBottom: "1px solid #E2E8F0",
-                      borderTop: "1px solid #E2E8F0",
+                      background: colorMap[catName] ? `${colorMap[catName]}18` : "var(--btn-edit-bg)",
+                      borderBottom: "1px solid var(--border)",
+                      borderTop: "1px solid var(--border)",
                     }}>
                       <div style={{
                         width: "10px", height: "10px", borderRadius: "3px", flexShrink: 0,
-                        background: colorMap[catName] || "#A0AEC0",
+                        background: colorMap[catName] || "var(--text-secondary)",
                       }} />
                       <span style={{
                         fontSize: "11px", fontWeight: 800,
-                        color: colorMap[catName] || "#4A5568",
+                        color: colorMap[catName] || "var(--text-body)",
                         textTransform: "uppercase", letterSpacing: "0.07em",
                       }}>
                         {catName}
@@ -312,10 +312,10 @@ export default function ShoppingPage() {
                       <span style={{
                         marginLeft: "auto",
                         fontSize: "11px", fontWeight: 600,
-                        color: colorMap[catName] || "#A0AEC0",
-                        background: "#fff",
+                        color: colorMap[catName] || "var(--text-secondary)",
+                        background: "var(--card-bg)",
                         padding: "1px 8px", borderRadius: "10px",
-                        border: `1px solid ${colorMap[catName] ? `${colorMap[catName]}44` : "#E2E8F0"}`,
+                        border: `1px solid ${colorMap[catName] ? `${colorMap[catName]}44` : "var(--border)"}`,
                       }}>
                         {items.length}
                       </span>
@@ -336,9 +336,9 @@ export default function ShoppingPage() {
 
             {unchecked.length === 0 && (
               <div style={{
-                background: "#fff", borderRadius: "14px", border: "1px solid #E2E8F0",
+                background: "var(--card-bg)", borderRadius: "14px", border: "1px solid var(--border)",
                 padding: "32px", textAlign: "center", marginBottom: "16px",
-                color: "#A0AEC0", fontSize: "14px",
+                color: "var(--text-secondary)", fontSize: "14px",
               }}>
                 ✅ All items checked off!
               </div>
@@ -347,14 +347,14 @@ export default function ShoppingPage() {
             {/* ── In cart ── */}
             {checkedItems.length > 0 && (
               <div style={{
-                background: "#F7FAFC", borderRadius: "14px",
-                border: "1px solid #E2E8F0", overflow: "hidden",
+                background: "var(--surface-subtle)", borderRadius: "14px",
+                border: "1px solid var(--border)", overflow: "hidden",
               }}>
                 <div style={{
-                  padding: "13px 20px", borderBottom: "1px solid #E2E8F0",
+                  padding: "13px 20px", borderBottom: "1px solid var(--border)",
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <span style={{ fontWeight: 700, fontSize: "13px", color: "#4A5568", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-body)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     In cart — {checkedItems.length}
                   </span>
                 </div>
