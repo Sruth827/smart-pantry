@@ -1,8 +1,180 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F5F0EB;
+  --foreground: #2D3748;
+  --brand: #4A6FA5;
+  --accent: #A0724A;
+  --accent-subtle: #F5EDE4;
+  --accent-border: #D4B49A;
+  --text-body: #4A5568;
+  --text-secondary: #A0AEC0;
+  --border: #E2E8F0;
+  --surface: #FFFFFF;
+  --surface-subtle: #F7FAFC;
+
+  /* Semantic alert / status colors */
+  --alert-expired-bg: #fef2f2;
+  --alert-expired-border: #fecaca;
+  --alert-expired-text: #dc2626;
+  --alert-soon-bg: #fffbeb;
+  --alert-soon-border: #fde68a;
+  --alert-soon-text: #ca8a04;
+  --alert-low-bg: #EBF8F0;
+  --alert-low-border: #C6E8D5;
+  --alert-low-text: #276749;
+  --alert-low-badge-bg: #C6E8D5;
+
+  /* Table / input tokens */
+  --th-bg: #F7FAFC;
+  --th-bg-active: #F0F4FF;
+  --th-border: #E2E8F0;
+  --input-bg: #ffffff;
+  --input-border: #E2E8F0;
+  --input-color: #2D3748;
+
+  /* Card tokens */
+  --card-bg: #ffffff;
+  --card-border: #E2E8F0;
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.04);
+
+  /* Row hover */
+  --row-hover: #F7FAFC;
+
+  /* Edit row highlight */
+  --edit-row-bg: #EBF4FF;
+  --edit-row-border: #BED3F3;
+
+  /* Stat card icon bg */
+  --stat-icon-blue: #EBF4FF;
+  --stat-icon-orange: #FDF3E7;
+  --stat-icon-red: #fef2f2;
+
+  /* Edit button tokens */
+  --btn-edit-bg: #EBF4FF;
+  --btn-edit-color: #4A6FA5;
+  --btn-edit-border: #BED3F3;
+  --btn-cancel-bg: #F7FAFC;
+  --btn-cancel-color: #4A5568;
+  --btn-cancel-border: #E2E8F0;
+}
+
+.dark {
+  --background: #1a1f2e;
+  --foreground: #e2e8f0;
+  --brand: #6b9fd4;
+  --accent: #c49a6c;
+  --accent-subtle: #2d1f0e;
+  --accent-border: #7a4a2a;
+  --text-body: #a0aec0;
+  --text-secondary: #718096;
+  --border: #2d3748;
+  --surface: #242b3d;
+  --surface-subtle: #1e2535;
+
+  /* Semantic alert / status colors — muted for dark */
+  --alert-expired-bg: #3b1a1a;
+  --alert-expired-border: #7f1d1d;
+  --alert-expired-text: #fca5a5;
+  --alert-soon-bg: #2d2510;
+  --alert-soon-border: #78350f;
+  --alert-soon-text: #fcd34d;
+  --alert-low-bg: #0f2d1e;
+  --alert-low-border: #166534;
+  --alert-low-text: #86efac;
+  --alert-low-badge-bg: #14532d;
+
+  /* Table / input tokens */
+  --th-bg: #1e2535;
+  --th-bg-active: #1a2744;
+  --th-border: #2d3748;
+  --input-bg: #1e2535;
+  --input-border: #2d3748;
+  --input-color: #e2e8f0;
+
+  /* Card tokens */
+  --card-bg: #242b3d;
+  --card-border: #2d3748;
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.3);
+
+  /* Row hover */
+  --row-hover: #1e2535;
+
+  /* Edit row highlight */
+  --edit-row-bg: #1a2744;
+  --edit-row-border: #2d4a72;
+
+  /* Stat card icon bg */
+  --stat-icon-blue: #1a2744;
+  --stat-icon-orange: #2d1f0e;
+  --stat-icon-red: #2d1414;
+
+  /* Edit button tokens */
+  --btn-edit-bg: #1a2744;
+  --btn-edit-color: #6b9fd4;
+  --btn-edit-border: #2d4a72;
+  --btn-cancel-bg: #1e2535;
+  --btn-cancel-color: #a0aec0;
+  --btn-cancel-border: #2d3748;
+}
+
+.midnight {
+  --background: #000000;
+  --foreground: #e5e5e5;
+  --brand: #9ca3af;
+  --accent: #c49a6c;
+  --accent-subtle: #1a1209;
+  --accent-border: #5a3a1a;
+  --text-body: #9ca3af;
+  --text-secondary: #6b7280;
+  --border: #2a2a2a;
+  --surface: #111111;
+  --surface-subtle: #0a0a0a;
+
+  /* Semantic alert / status colors — muted for midnight */
+  --alert-expired-bg: #1a0808;
+  --alert-expired-border: #450a0a;
+  --alert-expired-text: #fca5a5;
+  --alert-soon-bg: #1a1200;
+  --alert-soon-border: #451a03;
+  --alert-soon-text: #fcd34d;
+  --alert-low-bg: #021a0a;
+  --alert-low-border: #052e16;
+  --alert-low-text: #86efac;
+  --alert-low-badge-bg: #052e16;
+
+  /* Table / input tokens */
+  --th-bg: #111111;
+  --th-bg-active: #1a1a1a;
+  --th-border: #2a2a2a;
+  --input-bg: #111111;
+  --input-border: #2a2a2a;
+  --input-color: #e5e5e5;
+
+  /* Card tokens */
+  --card-bg: #111111;
+  --card-border: #2a2a2a;
+  --card-shadow: 0 1px 6px rgba(0,0,0,0.6);
+
+  /* Row hover */
+  --row-hover: #1a1a1a;
+
+  /* Edit row highlight */
+  --edit-row-bg: #1a1a1a;
+  --edit-row-border: #3a3a3a;
+
+  /* Stat card icon bg */
+  --stat-icon-blue: #1a1a1a;
+  --stat-icon-orange: #1a1000;
+  --stat-icon-red: #1a0808;
+
+  /* Edit button tokens */
+  --btn-edit-bg: #1a1a1a;
+  --btn-edit-color: #9ca3af;
+  --btn-edit-border: #3a3a3a;
+  --btn-cancel-bg: #111111;
+  --btn-cancel-color: #9ca3af;
+  --btn-cancel-border: #2a2a2a;
 }
 
 @theme inline {
@@ -12,32 +184,131 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-}
-.dark body {
-  background-color: #111827;
-  color: #f9fafb;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-.dark .card {
-  background-color: #1f2937;
-  border-color: #374151;
+/* ─── Global dark-mode overrides for inline-styled elements ─── */
+
+/* Inputs & selects */
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="date"],
+.dark select,
+.dark textarea {
+  background: var(--input-bg) !important;
+  color: var(--input-color) !important;
+  border-color: var(--input-border) !important;
+  color-scheme: dark;
 }
 
-.dark header {
-  background-color: #064e3b;
+.dark input::placeholder {
+  color: var(--text-secondary) !important;
 }
 
-.dark footer {
-  background-color: #1f2937;
+/* Tables */
+.dark table {
+  background: var(--card-bg);
+}
+
+.dark thead th {
+  background: var(--th-bg) !important;
+  color: var(--text-body) !important;
+  border-color: var(--th-border) !important;
+}
+
+.dark tbody tr {
+  border-color: var(--border) !important;
+}
+
+.dark tbody tr:hover {
+  background: var(--row-hover) !important;
+}
+
+.dark tbody td {
+  color: var(--foreground) !important;
+}
+
+/* Modals & cards */
+.dark [data-modal-bg] {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  color: var(--foreground) !important;
+}
+
+/* Scrollbar in dark */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: var(--surface-subtle);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* ─── Global midnight-mode overrides ─── */
+
+.midnight input[type="text"],
+.midnight input[type="number"],
+.midnight input[type="email"],
+.midnight input[type="password"],
+.midnight input[type="date"],
+.midnight select,
+.midnight textarea {
+  background: var(--input-bg) !important;
+  color: var(--input-color) !important;
+  border-color: var(--input-border) !important;
+  color-scheme: dark;
+}
+
+.midnight input::placeholder {
+  color: var(--text-secondary) !important;
+}
+
+.midnight table {
+  background: var(--card-bg);
+}
+
+.midnight thead th {
+  background: var(--th-bg) !important;
+  color: var(--text-body) !important;
+  border-color: var(--th-border) !important;
+}
+
+.midnight tbody tr {
+  border-color: var(--border) !important;
+}
+
+.midnight tbody tr:hover {
+  background: var(--row-hover) !important;
+}
+
+.midnight tbody td {
+  color: var(--foreground) !important;
+}
+
+.midnight [data-modal-bg] {
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+  color: var(--foreground) !important;
+}
+
+.midnight ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.midnight ::-webkit-scrollbar-track {
+  background: var(--surface-subtle);
+}
+.midnight ::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
 }

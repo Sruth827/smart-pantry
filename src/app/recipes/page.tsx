@@ -1,0 +1,249 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import AppShell from "@/components/AppShell";
+
+export default function RecipesPage() {
+  const { data: session, status } = useSession({ required: true });
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState("");
+  const [searched, setSearched] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+  const [recipeDetail, setRecipeDetail] = useState<any>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const { data: pantryData, isLoading } = useQuery({
+    queryKey: ["pantry", session?.user?.email],
+    queryFn: () => fetch("/api/pantry").then((r) => r.json()),
+    enabled: status === "authenticated",
+  });
+
+  const allItems: any[] = [];
+  if (Array.isArray(pantryData)) {
+    pantryData.forEach((cat: any) => {
+      if (cat.items) allItems.push(...cat.items);
+    });
+  }
+
+  const ingredientNames = allItems.map((i) => i.itemName).join(",");
+
+  const searchRecipes = async () => {
+    if (!ingredientNames) return;
+    setSearching(true);
+    setError("");
+    setSearched(true);
+    try {
+      const res = await fetch(`/api/recipes?ingredients=${encodeURIComponent(ingredientNames)}`);
+      const data = await res.json();
+      if (data.error) { setError(data.error); setRecipes([]); }
+      else setRecipes(data);
+    } catch {
+      setError("Failed to search recipes. Check your API key configuration.");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const viewRecipe = async (recipe: any) => {
+    setSelectedRecipe(recipe);
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/recipes/${recipe.id}`);
+      const data = await res.json();
+      setRecipeDetail(data);
+    } catch {
+      setRecipeDetail(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  if (status === "loading" || isLoading) {
+    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "#4A5568" }}>Loading...</div></AppShell>;
+  }
+
+  return (
+    <AppShell>
+      <div style={{ padding: "40px 48px" }}>
+        <div style={{ marginBottom: "32px" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#2D3748", margin: 0 }}>Recipes</h1>
+          <p style={{ color: "#4A5568", marginTop: "6px", fontSize: "15px" }}>
+            Discover recipes you can make with your pantry ingredients.
+          </p>
+        </div>
+
+        {/* Pantry summary + Search */}
+        <div style={{ background: "#fff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0", marginBottom: "24px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div>
+              <h2 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", margin: 0 }}>Your Pantry Ingredients</h2>
+              <p style={{ color: "#4A5568", fontSize: "13px", marginTop: "4px" }}>
+                {allItems.length} items will be matched against Spoonacular recipes.
+              </p>
+            </div>
+            <button
+              onClick={searchRecipes}
+              disabled={searching || allItems.length === 0}
+              style={{
+                padding: "10px 24px", borderRadius: "10px", background: "#4A6FA5",
+                color: "#fff", fontWeight: 700, fontSize: "14px", border: "none",
+                cursor: allItems.length === 0 ? "not-allowed" : "pointer",
+                opacity: allItems.length === 0 ? 0.5 : 1,
+              }}
+            >
+              {searching ? "Searching..." : "🔍 Find Recipes"}
+            </button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {allItems.slice(0, 20).map((item) => (
+              <span key={item.id} style={{
+                padding: "4px 12px", borderRadius: "20px", fontSize: "12px",
+                background: "#F5EDE4", color: "#A0724A", border: "1px solid #D4B49A", fontWeight: 500,
+              }}>{item.itemName}</span>
+            ))}
+            {allItems.length > 20 && (
+              <span style={{ padding: "4px 12px", borderRadius: "20px", fontSize: "12px", background: "#F7FAFC", color: "#A0AEC0" }}>
+                +{allItems.length - 20} more
+              </span>
+            )}
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "16px", marginBottom: "16px", color: "#dc2626", fontSize: "14px" }}>
+            {error}
+          </div>
+        )}
+
+        {/* Recipe Grid */}
+        {recipes.length > 0 && (
+          <>
+            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#2D3748", marginBottom: "16px" }}>
+              {recipes.length} Recipes Found
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+              {recipes.map((recipe: any) => (
+                <div
+                  key={recipe.id}
+                  onClick={() => viewRecipe(recipe)}
+                  style={{
+                    background: "#fff", borderRadius: "14px", border: "1px solid #e2e8f0",
+                    overflow: "hidden", cursor: "pointer", transition: "all 0.2s",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.10)";
+                    (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+                    (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                  }}
+                >
+                  {recipe.image && (
+                    <img src={recipe.image} alt={recipe.title} style={{ width: "100%", height: "160px", objectFit: "cover" }} />
+                  )}
+                  <div style={{ padding: "16px" }}>
+                    <h3 style={{ fontWeight: 700, fontSize: "15px", color: "#2D3748", margin: "0 0 8px" }}>{recipe.title}</h3>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{
+                        padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600,
+                        background: recipe.usedIngredientCount >= 3 ? "#F5EDE4" : "#fff7ed",
+                        color: recipe.usedIngredientCount >= 3 ? "#A0724A" : "#ea580c",
+                        border: `1px solid ${recipe.usedIngredientCount >= 3 ? "#D4B49A" : "#fed7aa"}`,
+                      }}>
+                        ✓ {recipe.usedIngredientCount} from pantry
+                      </span>
+                      {recipe.missedIngredientCount > 0 && (
+                        <span style={{
+                          padding: "4px 10px", borderRadius: "20px", fontSize: "12px",
+                          background: "#F7FAFC", color: "#A0AEC0", border: "1px solid #e2e8f0",
+                        }}>
+                          {recipe.missedIngredientCount} missing
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {searched && recipes.length === 0 && !error && !searching && (
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "48px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>🍽️</div>
+            <h2 style={{ color: "#2D3748", fontWeight: 700 }}>No recipes found</h2>
+            <p style={{ color: "#4A5568" }}>Try adding more items to your pantry.</p>
+          </div>
+        )}
+
+        {/* Recipe Detail Modal */}
+        {selectedRecipe && (
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+            onClick={() => { setSelectedRecipe(null); setRecipeDetail(null); }}
+          >
+            <div
+              style={{ background: "#fff", borderRadius: "16px", maxWidth: "600px", width: "100%", maxHeight: "80vh", overflow: "auto" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {selectedRecipe.image && (
+                <img src={selectedRecipe.image} alt={selectedRecipe.title} style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "16px 16px 0 0" }} />
+              )}
+              <div style={{ padding: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                  <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#2D3748", margin: 0, flex: 1 }}>{selectedRecipe.title}</h2>
+                  <button onClick={() => { setSelectedRecipe(null); setRecipeDetail(null); }} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#A0AEC0", marginLeft: "12px" }}>✕</button>
+                </div>
+
+                {loadingDetail ? (
+                  <p style={{ color: "#4A5568" }}>Loading recipe details...</p>
+                ) : recipeDetail ? (
+                  <>
+                    {recipeDetail.readyInMinutes && (
+                      <p style={{ color: "#4A5568", fontSize: "14px", marginBottom: "16px" }}>
+                        ⏱️ Ready in {recipeDetail.readyInMinutes} minutes · 🍽️ Serves {recipeDetail.servings}
+                      </p>
+                    )}
+                    <div style={{ marginBottom: "16px" }}>
+                      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", marginBottom: "8px" }}>Pantry Ingredients Used</h3>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        {selectedRecipe.usedIngredients?.map((ing: any) => (
+                          <span key={ing.id} style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", background: "#F5EDE4", color: "#A0724A", border: "1px solid #D4B49A" }}>
+                            ✓ {ing.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {selectedRecipe.missedIngredients?.length > 0 && (
+                      <div style={{ marginBottom: "16px" }}>
+                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#2D3748", marginBottom: "8px" }}>Still Need</h3>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          {selectedRecipe.missedIngredients.map((ing: any) => (
+                            <span key={ing.id} style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", background: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" }}>
+                              {ing.original}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {recipeDetail.sourceUrl && (
+                      <a href={recipeDetail.sourceUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-block", marginTop: "8px", padding: "10px 20px", background: "#4A6FA5", color: "#fff", borderRadius: "10px", fontWeight: 600, fontSize: "14px", textDecoration: "none" }}>
+                        View Full Recipe →
+                      </a>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}

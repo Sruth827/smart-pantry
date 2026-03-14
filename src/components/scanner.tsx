@@ -73,7 +73,7 @@ export default function Scanner({ categories }: { categories: any[] }) {
     return (
         <div className="flex flex-col items-center gap-6 p-4">
             {/* Back Button */}
-            <Link href="/dashboard" className="self-start text-blue-600 hover:underline mb-2">
+            <Link href="/dashboard" className="self-start text-[#4A6FA5] hover:underline mb-2">
                 ← Back to Dashboard
             </Link>
 
@@ -81,9 +81,9 @@ export default function Scanner({ categories }: { categories: any[] }) {
 
             {/* The "Confirm Item" UI */}
             {scannedItem && (
-                <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg border-2 border-green-500">
-                    <h3 className="text-xl font-bold text-gray-800">{scannedItem.itemName}</h3>
-                    <p className="text-sm text-gray-500 mb-4">UPC: {scannedItem.upc}</p>
+                <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg border-2 border-[#4A6FA5]">
+                    <h3 className="text-xl font-bold text-[#2D3748]">{scannedItem.itemName}</h3>
+                    <p className="text-sm text-[#A0AEC0] mb-4">UPC: {scannedItem.upc}</p>
 
                     <label className="block text-sm font-medium mb-1">Where does this go?</label>
                     <select 
@@ -101,13 +101,13 @@ export default function Scanner({ categories }: { categories: any[] }) {
                         <button 
                             onClick={handleFinalSave}
                             disabled={isSaving}
-                            className="flex-1 bg-green-600 text-white py-2 rounded font-bold"
+                            className="flex-1 bg-[#4A6FA5] text-white py-2 rounded font-bold"
                         >
                             {isSaving ? "Saving..." : "Confirm & Add"}
                         </button>
                         <button 
                             onClick={() => { setScannedItem(null); scannerRef.current?.resume(); }}
-                            className="px-4 py-2 border rounded text-gray-600"
+                            className="px-4 py-2 border rounded text-[#4A5568]"
                         >
                             Cancel
                         </button>

@@ -24,6 +24,7 @@ model Category {
   id     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId String       @map("user_id") @db.Uuid
   name   String       @db.VarChar(50)
+  color  String?      @db.VarChar(7)
   user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   items  PantryItem[]
 
