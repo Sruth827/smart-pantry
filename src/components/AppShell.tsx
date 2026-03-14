@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Sidebar from "./Sidebar";
+import FirstTimeOnboarding from "./FirstTimeOnboarding";
+import { useTheme } from "./ThemeContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userName, setUserName] = useState("");
+  const { data: session, status } = useSession();
+  const { theme } = useTheme();
+
+  const topBarBg = theme === "midnight"
+    ? "linear-gradient(180deg, #0a0a0a 0%, #141414 100%)"
+    : "linear-gradient(180deg, #2D3748 0%, #3a4a60 100%)";
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -15,7 +26,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  // Close sidebar when navigating on mobile
+  // Check if this user has been onboarded yet
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user) return;
+    const userId = session.user.id ?? session.user.email ?? "default";
+    const key = `sp-onboarded-${userId}`;
+    const alreadyOnboarded = localStorage.getItem(key);
+    if (!alreadyOnboarded) {
+      setUserName(session.user.name || session.user.email || "there");
+      setShowOnboarding(true);
+    }
+  }, [status, session]);
+
+  const handleOnboardingComplete = () => {
+    const userId = session?.user?.id ?? session?.user?.email ?? "default";
+    localStorage.setItem(`sp-onboarded-${userId}`, "true");
+    setShowOnboarding(false);
+  };
+
   const closeSidebar = () => { if (isMobile) setOpen(false); };
 
   return (
@@ -52,7 +80,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             position: "sticky", top: 0, zIndex: 30,
             display: "flex", alignItems: "center", gap: "12px",
             padding: "12px 16px",
-            background: "linear-gradient(180deg, #2D3748 0%, #3a4a60 100%)",
+            background: topBarBg,
             boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
           }}>
             <button
@@ -65,7 +93,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 color: "#fff", flexShrink: 0,
               }}
             >
-              {/* Hamburger icon */}
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
@@ -78,6 +105,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {children}
       </main>
+
+      {/* First-time onboarding overlay */}
+      {showOnboarding && (
+        <FirstTimeOnboarding
+          userName={userName}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
     </div>
   );
 }
