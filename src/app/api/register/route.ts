@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { db } from "@/lib/db";
 import bcrypt from "bcrypt";
+import { sendWelcomeEmail } from "@/lib/mailer";
 
 export async function POST(req: Request) {
     try {
@@ -37,6 +38,11 @@ export async function POST(req: Request) {
             }
         }
     });
+
+    // Send welcome email — fire-and-forget so it never blocks registration
+    sendWelcomeEmail(email, fullName).catch((err) =>
+      console.error("Welcome email failed:", err)
+    );
 
     return NextResponse.json({ 
         message: "User creation successful",

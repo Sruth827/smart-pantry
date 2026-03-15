@@ -26,9 +26,7 @@ export default function QuantityPicker({ itemId, currentQty }: { itemId: string,
     const newQty = isNaN(parsed) || parsed < 0 ? 0 : parsed;
     setInputValue(String(newQty));
     setIsEditing(false);
-
     if (newQty === currentQty) return;
-
     setLoading(true);
     await fetch(`/api/pantry/${itemId}`, {
       method: "PATCH",
@@ -42,7 +40,8 @@ export default function QuantityPicker({ itemId, currentQty }: { itemId: string,
   return (
     <div style={{
       display: "inline-flex", alignItems: "center", gap: "4px",
-      background: "#F5F0EB", borderRadius: "8px", padding: "3px",
+      background: "var(--surface-subtle)", borderRadius: "8px", padding: "3px",
+      border: "1px solid var(--border)",
     }}>
       {/* Minus */}
       <button
@@ -50,51 +49,38 @@ export default function QuantityPicker({ itemId, currentQty }: { itemId: string,
         disabled={loading || currentQty <= 0}
         style={{
           width: "24px", height: "24px", borderRadius: "5px", border: "none",
-          background: "#fff", cursor: currentQty <= 0 ? "not-allowed" : "pointer",
-          color: "#dc2626", fontWeight: 700, fontSize: "16px", lineHeight: 1,
+          background: "var(--card-bg)", cursor: currentQty <= 0 ? "not-allowed" : "pointer",
+          color: "var(--alert-expired-text)", fontWeight: 700, fontSize: "16px", lineHeight: 1,
           display: "flex", alignItems: "center", justifyContent: "center",
           boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
           opacity: (loading || currentQty <= 0) ? 0.4 : 1,
-          transition: "background 0.12s",
-          flexShrink: 0,
+          transition: "background 0.12s", flexShrink: 0,
         }}
-        onMouseEnter={(e) => { if (currentQty > 0 && !loading) (e.currentTarget as HTMLElement).style.background = "#fef2f2"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}
-      >
-        −
-      </button>
+        onMouseEnter={(e) => { if (currentQty > 0 && !loading) (e.currentTarget as HTMLElement).style.background = "var(--alert-expired-bg)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--card-bg)"; }}
+      >−</button>
 
       {/* Editable quantity input */}
       <input
         ref={inputRef}
-        type="number"
-        min="0"
-        step="0.1"
+        type="number" min="0" step="0.1"
         value={isEditing ? inputValue : String(currentQty)}
         disabled={loading}
-        onFocus={() => {
-          setIsEditing(true);
-          setInputValue(String(currentQty));
-          setTimeout(() => inputRef.current?.select(), 0);
-        }}
+        onFocus={() => { setIsEditing(true); setInputValue(String(currentQty)); setTimeout(() => inputRef.current?.select(), 0); }}
         onChange={(e) => setInputValue(e.target.value)}
         onBlur={(e) => commitValue(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          if (e.key === "Escape") {
-            setInputValue(String(currentQty));
-            setIsEditing(false);
-            (e.target as HTMLInputElement).blur();
-          }
+          if (e.key === "Escape") { setInputValue(String(currentQty)); setIsEditing(false); (e.target as HTMLInputElement).blur(); }
         }}
         style={{
           width: "48px", height: "24px", textAlign: "center",
-          fontSize: "13px", fontWeight: 700, color: "#2D3748",
-          border: isEditing ? "1px solid #4A6FA5" : "1px solid transparent",
-          borderRadius: "5px", background: isEditing ? "#fff" : "transparent",
+          fontSize: "13px", fontWeight: 700, color: "var(--foreground)",
+          border: isEditing ? "1px solid var(--brand)" : "1px solid transparent",
+          borderRadius: "5px",
+          background: isEditing ? "var(--input-bg)" : "transparent",
           outline: "none", cursor: "text", padding: "0 2px",
           transition: "border-color 0.12s, background 0.12s",
-          // Hide number input spin arrows
           MozAppearance: "textfield",
         } as React.CSSProperties}
       />
@@ -105,21 +91,16 @@ export default function QuantityPicker({ itemId, currentQty }: { itemId: string,
         disabled={loading}
         style={{
           width: "24px", height: "24px", borderRadius: "5px", border: "none",
-          background: "#fff", cursor: loading ? "not-allowed" : "pointer",
-          color: "#4A6FA5", fontWeight: 700, fontSize: "16px", lineHeight: 1,
+          background: "var(--card-bg)", cursor: loading ? "not-allowed" : "pointer",
+          color: "var(--brand)", fontWeight: 700, fontSize: "16px", lineHeight: 1,
           display: "flex", alignItems: "center", justifyContent: "center",
           boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-          opacity: loading ? 0.4 : 1,
-          transition: "background 0.12s",
-          flexShrink: 0,
+          opacity: loading ? 0.4 : 1, transition: "background 0.12s", flexShrink: 0,
         }}
-        onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = "#EBF4FF"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}
-      >
-        +
-      </button>
+        onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = "var(--btn-edit-bg)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--card-bg)"; }}
+      >+</button>
 
-      {/* Hide number input spinners via global style */}
       <style>{`
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

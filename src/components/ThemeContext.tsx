@@ -2,35 +2,39 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "midnight";
 
 const ThemeContext = createContext<{
   theme: Theme;
   toggle: () => void;
-}>({ theme: "light", toggle: () => {} });
+  setTheme: (t: Theme) => void;
+}>({ theme: "light", toggle: () => {}, setTheme: () => {} });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
     const stored = localStorage.getItem("sp-theme") as Theme | null;
-    if (stored) setTheme(stored);
+    if (stored && ["light", "dark", "midnight"].includes(stored)) {
+      setThemeState(stored);
+    }
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    // Remove all theme classes first
+    root.classList.remove("dark", "midnight");
+    if (theme === "dark")     root.classList.add("dark");
+    if (theme === "midnight") root.classList.add("midnight");
     localStorage.setItem("sp-theme", theme);
   }, [theme]);
 
-  const toggle = () => setTheme((t) => (t === "light" ? "dark" : "light"));
+  const setTheme = (t: Theme) => setThemeState(t);
+  const toggle = () =>
+    setThemeState((t) => (t === "light" ? "dark" : t === "dark" ? "midnight" : "light"));
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme, toggle, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
