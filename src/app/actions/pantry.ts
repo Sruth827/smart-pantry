@@ -6,57 +6,60 @@ import { getServerSession } from "next-auth";
 
 
 export async function createPantryItem(prevState: any, formData: FormData) {
-  // 1. Get the session (The Security Guard)
   const session = await getServerSession(authOptions);
-  console.log("🛠️ SERVER SESSION CHECK:", session?.user);
-  if (!session?.user?.id) {
-    console.log("❌ SESSION FAILED - USER ID MISSING");
+
+  if (!session?.user?.email) {
     return { success: false, error: "Unauthorized" };
   }
 
-  // 2. Extract and Validate Form Data
+  const dbUser = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+
+  if (!dbUser) {
+    return { success: false, error: "User not found" };
+  }
+
   const itemName = formData.get("itemName") as string;
   const quantity = parseFloat(formData.get("quantity") as string) || 1;
-  const unitLabel = formData.get("unitLabel") as string || "pcs";
-  const categoryId = formData.get("categoryId") as string; // From a dropdown/select
+  const unitLabel = (formData.get("unitLabel") as string) || "pcs";
+  const categoryId = formData.get("categoryId") as string;
   const expirationDate = formData.get("expirationDate") as string;
 
   try {
     const newItem = await db.pantryItem.create({
       data: {
-        itemName: itemName,
-        quantity: quantity,
-        unitLabel: unitLabel,
-        // If date is not choosed, default to 7 days from now
-        expirationDate: expirationDate ? new Date(expirationDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        
-        // Connect Forieng Key
+        itemName,
+        quantity,
+        unitLabel,
+        expirationDate: expirationDate
+          ? new Date(expirationDate)
+          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+
         user: {
-          connect: { id: session.user.id }
+          connect: { id: dbUser.id },
         },
-        // connect category if one is selected
+
         ...(categoryId && {
-          category: { connect: { id: categoryId } }
+          category: { connect: { id: categoryId } },
         }),
       },
     });
 
     revalidatePath("/dashboard");
-    return { success: true, item: {
-      ...newItem,
-      quantity: Number(newItem.quantity),
-      lowThreshold: Number(newItem.lowThreshold),
-      expirationDate: newItem.expirationDate!.toISOString(),
-      updatedAt: newItem.updatedAt.toISOString(), 
-    }
-    };
 
+    return {
+      success: true,
+      item: {
+        ...newItem,
+        quantity: Number(newItem.quantity),
+      },
+    };
   } catch (error) {
-    console.error("POST Error:", error);
-    return { success: false, error: "Database save failed." };
+    console.error("Create Error:", error);
+    return { success: false, error: "Failed to create item." };
   }
 }
-
 
 
 export async function processScannedBarcode(upc: string, categoryId? : string){
@@ -123,13 +126,22 @@ export async function processScannedBarcode(upc: string, categoryId? : string){
 
 export async function deletePantryItem(itemId: string) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+  // Must be logged in
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  // 🔐 NEW ROLE CHECK
+  if (session.user.role !== "ADMIN") {
+    return { success: false, error: "Admins only" };
+  }
 
   try {
     await db.pantryItem.delete({
       where: {
         id: itemId,
-        userId: session.user.id // Critical security check!
+        userId: session.user.id,
       },
     });
 
