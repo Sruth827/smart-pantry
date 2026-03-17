@@ -7,7 +7,7 @@ CREATE TABLE "shopping_items" (
     "source" VARCHAR(50),
     "source_label" VARCHAR(100),
     "checked" BOOLEAN NOT NULL DEFAULT false,
-    "added_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "added_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "shopping_items_pkey" PRIMARY KEY ("id")
 );
