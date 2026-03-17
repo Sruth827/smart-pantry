@@ -4,18 +4,19 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env ("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fullName     String       @map("full_name") @db.VarChar(100)
-  email        String       @unique @db.VarChar(255)
-  passwordHash String       @map("password_hash")
-  unitPref     UnitPref     @default(Metric) @map("unit_pref")
-  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName     String         @map("full_name") @db.VarChar(100)
+  email        String         @unique @db.VarChar(255)
+  passwordHash String         @map("password_hash")
+  unitPref     UnitPref       @default(Metric) @map("unit_pref")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   categories   Category[]
   pantryItems  PantryItem[]
+  ShoppingItem ShoppingItem[]
 
   @@map("users")
 }
@@ -48,6 +49,21 @@ model PantryItem {
 
   @@index([userId])
   @@map("pantry_items")
+}
+
+model ShoppingItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  itemName    String   @map("item_name") @db.VarChar(100)
+  quantity    String?  @db.VarChar(50)
+  source      String?  @db.VarChar(50) // e.g. "recipe"
+  sourceLabel String?  @map("source_label") @db.VarChar(100) // e.g. recipe title
+  checked     Boolean  @default(false)
+  addedAt     DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("shopping_items")
 }
 
 enum UnitPref {

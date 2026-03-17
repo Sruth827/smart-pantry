@@ -17,6 +17,8 @@ export default function RecipesPage() {
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [excludedItems, setExcludedItems] = useState<Set<string>>(new Set());
   const [filterSearch, setFilterSearch] = useState("");
+  const [addingIngredients, setAddingIngredients] = useState<Set<string>>(new Set());
+  const [addedIngredients, setAddedIngredients] = useState<Set<string>>(new Set());
 
   const { data: pantryData, isLoading } = useQuery({
     queryKey: ["pantry", session?.user?.email],
@@ -47,6 +49,34 @@ export default function RecipesPage() {
     i.itemName.toLowerCase().includes(filterSearch.toLowerCase())
   );
 
+  const addToShoppingList = async (ingredient: any, recipeTitle: string) => {
+    const key = ingredient.name || ingredient.original;
+    setAddingIngredients((prev) => new Set(prev).add(key));
+    try {
+      await fetch("/api/shopping-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemName: ingredient.name || ingredient.original,
+          quantity: ingredient.amount
+            ? `${ingredient.amount} ${ingredient.unit || ""}`.trim()
+            : null,
+          source: "recipe",
+          sourceLabel: recipeTitle,
+        }),
+      });
+      setAddedIngredients((prev) => new Set(prev).add(key));
+    } catch {
+      // silently fail
+    } finally {
+      setAddingIngredients((prev) => {
+        const n = new Set(prev);
+        n.delete(key);
+        return n;
+      });
+    }
+  };
+
   const searchRecipes = async () => {
     if (!ingredientNames) return;
     setSearching(true);
@@ -66,6 +96,8 @@ export default function RecipesPage() {
 
   const viewRecipe = async (recipe: any) => {
     setSelectedRecipe(recipe);
+    setRecipeDetail(null);
+    setAddedIngredients(new Set());
     setLoadingDetail(true);
     try {
       const res = await fetch(`/api/recipes/${recipe.id}`);
@@ -358,13 +390,63 @@ export default function RecipesPage() {
                     </div>
                     {selectedRecipe.missedIngredients?.length > 0 && (
                       <div style={{ marginBottom: "16px" }}>
-                        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--foreground)", marginBottom: "8px" }}>Still Need</h3>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                          {selectedRecipe.missedIngredients.map((ing: any) => (
-                            <span key={ing.id} style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", background: "var(--alert-soon-bg)", color: "var(--alert-soon-text)", border: "1px solid var(--alert-soon-border)" }}>
-                              {ing.original}
-                            </span>
-                          ))}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--foreground)", margin: 0 }}>Still Need</h3>
+                          <button
+                            onClick={() => {
+                              selectedRecipe.missedIngredients
+                                .filter((ing: any) => !addedIngredients.has(ing.name || ing.original))
+                                .forEach((ing: any) => addToShoppingList(ing, selectedRecipe.title));
+                            }}
+                            disabled={selectedRecipe.missedIngredients.every((ing: any) => addedIngredients.has(ing.name || ing.original))}
+                            style={{
+                              padding: "5px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: 600,
+                              background: "var(--brand)", color: "#fff", border: "none",
+                              cursor: selectedRecipe.missedIngredients.every((ing: any) => addedIngredients.has(ing.name || ing.original)) ? "not-allowed" : "pointer",
+                              opacity: selectedRecipe.missedIngredients.every((ing: any) => addedIngredients.has(ing.name || ing.original)) ? 0.5 : 1,
+                            }}
+                          >
+                            + Add All to List
+                          </button>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {selectedRecipe.missedIngredients.map((ing: any) => {
+                            const key = ing.name || ing.original;
+                            const isAdded = addedIngredients.has(key);
+                            const isAdding = addingIngredients.has(key);
+                            return (
+                              <div
+                                key={ing.id}
+                                style={{
+                                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                                  padding: "8px 12px", borderRadius: "10px",
+                                  background: isAdded ? "var(--accent-subtle, #F5EDE4)" : "var(--alert-soon-bg)",
+                                  border: `1px solid ${isAdded ? "var(--accent-border, #D4B49A)" : "var(--alert-soon-border)"}`,
+                                }}
+                              >
+                                <span style={{
+                                  fontSize: "13px", fontWeight: 500,
+                                  color: isAdded ? "#A0724A" : "var(--alert-soon-text)",
+                                }}>
+                                  {isAdded ? "✓ " : ""}{ing.original}
+                                </span>
+                                <button
+                                  onClick={() => !isAdded && !isAdding && addToShoppingList(ing, selectedRecipe.title)}
+                                  disabled={isAdded || isAdding}
+                                  style={{
+                                    padding: "4px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                                    background: isAdded ? "transparent" : "var(--card-bg)",
+                                    color: isAdded ? "#A0724A" : "var(--text-body)",
+                                    border: isAdded ? "none" : "1px solid var(--border)",
+                                    cursor: isAdded || isAdding ? "default" : "pointer",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {isAdding ? "Adding..." : isAdded ? "Added ✓" : "🛒 Add"}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
