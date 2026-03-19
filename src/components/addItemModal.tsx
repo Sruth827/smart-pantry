@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useActionState, useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query";
 import { createPantryItem } from "@/app/actions/pantry";
 import UnitDropdown from "./UnitDropdown";
 
@@ -20,13 +21,18 @@ export default function AddItemForm({
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, isPending] = useActionState(createPantryItem, null);
   const [unitLabel, setUnitLabel] = useState("");
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (state?.success) {
-      setIsOpen(false);
-      setUnitLabel("");
-    }
-  }, [state]);
+useEffect(() => {
+  if (state?.success) {
+    queryClient.invalidateQueries({ queryKey: ["pantry"] });
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+    setIsOpen(false);
+    setUnitLabel("");
+  }
+}, [state, queryClient]);
+
+
 
   const inputCls: React.CSSProperties = {
     width: "100%", border: "1px solid var(--input-border)", borderRadius: "6px",
