@@ -6,6 +6,14 @@ declare module "next-auth" {
       id: string;
       email: string;
       name: string;
+      isFirstLogin?: boolean;
     }
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    isFirstLogin?: boolean;
   }
 }

@@ -5,8 +5,7 @@ import { db } from "./db";
 import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
-    // Standard adapter initialization for Prisma 5
-    adapter: PrismaAdapter(db), 
+    adapter: PrismaAdapter(db),
     session: {
         strategy: "jwt",
     },
@@ -20,54 +19,70 @@ export const authOptions: NextAuthOptions = {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" }
             },
-	    async authorize(credentials) {
-    	    	console.log("--- Login Attempt ---");
-       	    	console.log("Credentials received:", credentials?.email);
+            async authorize(credentials) {
+                console.log("--- Login Attempt ---");
+                console.log("Credentials received:", credentials?.email);
 
-            	if (!credentials?.email || !credentials?.password) {
-        		console.log("Fail: Missing credentials");
-        		return null;
-    	    	}
+                if (!credentials?.email || !credentials?.password) {
+                    console.log("Fail: Missing credentials");
+                    return null;
+                }
 
-    	    	const user = await db.user.findUnique({
-        		where: { email: credentials.email }
-            	});
+                const user = await db.user.findUnique({
+                    where: { email: credentials.email }
+                });
 
-    	    	if (!user) {
-        		console.log("Fail: User not found in DB");
-        		return null;
-    	    	}
+                if (!user) {
+                    console.log("Fail: User not found in DB");
+                    return null;
+                }
 
-    	    	console.log("User found in DB:", user.email);
-            	console.log("Hash in DB exists:", !!user.passwordHash);
+                console.log("User found in DB:", user.email);
+                console.log("Hash in DB exists:", !!user.passwordHash);
 
-            	const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
-            	console.log("Bcrypt comparison result:", isValid);
+                const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+                console.log("Bcrypt comparison result:", isValid);
 
-            	if (!isValid) {
-            		console.log("Fail: Password mismatch");
-          		return null;
-    	    	}
+                if (!isValid) {
+                    console.log("Fail: Password mismatch");
+                    return null;
+                }
 
-    	    	console.log("Success: Authorizing user");
-    	    	return { id: user.id, email: user.email, name: user.fullName };
-	    }
+                // Determine if this is the user's first-ever login
+                const isFirstLogin = !user.hasLoggedInBefore;
+
+                // If it IS their first login, mark the flag in the DB now
+                if (isFirstLogin) {
+                    await db.user.update({
+                        where: { id: user.id },
+                        data: { hasLoggedInBefore: true },
+                    });
+                }
+
+                console.log("Success: Authorizing user, isFirstLogin:", isFirstLogin);
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.fullName,
+                    isFirstLogin,
+                } as any;
+            }
         })
     ],
-	callbacks: {
-		async jwt({ token, user }) {
-    	// If we just signed in, 'user' will be available
-    		if (user) {
-      			token.id = user.id;
-    		}
-    		return token;
-  		},
-  		async session({ session, token }) {
-    		// Move the ID from the token into the session object
-    		if (session.user) {
-      			session.user.id = token.id as string;
-    		}
-    		return session;
-		}
-	}
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.isFirstLogin = (user as any).isFirstLogin ?? false;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user) {
+                session.user.id = token.id as string;
+                session.user.isFirstLogin = token.isFirstLogin ?? false;
+            }
+            return session;
+        }
+    }
 };

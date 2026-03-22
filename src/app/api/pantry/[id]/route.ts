@@ -21,6 +21,7 @@ export async function PATCH(
     if ('unitLabel' in body) updateData.unitLabel = body.unitLabel || null;
     if ('itemName' in body) updateData.itemName = body.itemName;
     if ('categoryId' in body) updateData.categoryId = body.categoryId || null;
+    if ('notes' in body) updateData.notes = body.notes || null;
     const updatedItem = await db.pantryItem.update({ where: { id }, data: updateData });
     return NextResponse.json(updatedItem);
   } catch (error) {

@@ -2,7 +2,9 @@
 
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import AppShell from "@/components/AppShell";
+import FirstTimeOnboarding from "@/components/FirstTimeOnboarding";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +102,15 @@ function LowStockItem({ item }: { item: any }) {
 
 export default function DashboardPage() {
   const { data: session, status } = useSession({ required: true });
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+
+  // Once session is ready, decide whether to show onboarding.
+  // We use a local state so dismissing the modal doesn't require a session reload.
+  const resolvedOnboarding = (() => {
+    if (showOnboarding !== null) return showOnboarding;
+    if (status === "authenticated") return session?.user?.isFirstLogin ?? false;
+    return false;
+  })();
 
   const { data: pantryData, isLoading } = useQuery({
     queryKey: ["pantry", session?.user?.email],
@@ -143,6 +154,12 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
+      {resolvedOnboarding && (
+        <FirstTimeOnboarding
+          userName={session?.user?.name || "there"}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
       <div style={{ padding: "40px 48px" }}>
         <div style={{ marginBottom: "36px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>

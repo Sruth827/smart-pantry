@@ -110,13 +110,13 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
   const finish = async () => {
     setSaving(true);
     try {
+      // Save unit preference
       await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ unitPref }),
       });
     } catch { /* best-effort */ }
-    localStorage.setItem("sp-onboarded", "true");
     setSaving(false);
     onComplete();
   };
