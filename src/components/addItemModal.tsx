@@ -123,6 +123,16 @@ useEffect(() => {
                 <input type="date" name="expirationDate" style={inputCls} />
               </div>
 
+              <div style={{ marginBottom: "14px" }}>
+                <label style={labelCls}>Notes <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>(optional)</span></label>
+                <textarea
+                  name="notes"
+                  rows={2}
+                  placeholder="e.g. Opened, store in fridge after opening…"
+                  style={{ ...inputCls, resize: "vertical", minHeight: "60px", fontFamily: "inherit" }}
+                />
+              </div>
+
               {state?.error && <p style={{ color: "var(--alert-expired-text)", fontSize: "13px", fontStyle: "italic", marginBottom: "10px" }}>{state.error}</p>}
 
               <div style={{ display: "flex", gap: "10px", paddingTop: "8px" }}>

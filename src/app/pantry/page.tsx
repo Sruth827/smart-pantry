@@ -12,7 +12,7 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-type SortField = "itemName" | "category" | "quantity" | "unitLabel" | "lowThreshold" | "expirationDate";
+type SortField = "itemName" | "category" | "quantity" | "unitLabel" | "lowThreshold" | "expirationDate" | "notes";
 type SortDir = "asc" | "desc";
 
 function parseLocalDate(dateStr: string): Date {
@@ -45,6 +45,7 @@ function EditItemModal({
   const [unitLabel, setUnitLabel]   = useState(item.unitLabel ?? "");
   const [threshold, setThreshold]   = useState(String(Number(item.lowThreshold)));
   const [expDate, setExpDate]       = useState(item.expirationDate ? item.expirationDate.split("T")[0] : "");
+  const [notes, setNotes]           = useState(item.notes ?? "");
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
 
@@ -65,6 +66,7 @@ function EditItemModal({
           itemName: itemName.trim(), categoryId: categoryId || null,
           quantity: parseFloat(quantity) || 0, unitLabel: unitLabel.trim() || null,
           lowThreshold: parseFloat(threshold) || 0, expirationDate: expDate || null,
+          notes: notes.trim() || null,
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
@@ -125,6 +127,16 @@ function EditItemModal({
             <div><label style={labelStyle}>Low Stock Threshold</label><input type="number" min="0" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} style={inputStyle} placeholder="0" /></div>
             <div><label style={labelStyle}>Expiration Date</label><input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }} /></div>
           </div>
+          <div style={{ marginBottom: "16px" }}>
+            <label style={labelStyle}>Notes <span style={{ fontWeight: 400, color: "var(--text-secondary)", textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="e.g. Opened, store in fridge after opening…"
+              style={{ ...inputStyle, resize: "vertical", minHeight: "60px", fontFamily: "inherit" }}
+            />
+          </div>
           {error && (<div style={{ padding: "10px 12px", borderRadius: "8px", marginBottom: "12px", background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)", color: "var(--alert-expired-text)", fontSize: "13px" }}>{error}</div>)}
         </div>
         <div style={{ padding: "12px 24px 20px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
@@ -138,6 +150,79 @@ function EditItemModal({
         </div>
       </div>
       <style>{`@keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
+    </div>
+  );
+}
+
+// --- Inline Notes Cell ---
+
+function NotesCell({ itemId, initialNotes, sessionEmail }: { itemId: string; initialNotes: string; sessionEmail: any }) {
+  const queryClient = useQueryClient();
+  const [notes, setNotes] = useState(initialNotes);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Keep in sync if parent data refreshes
+  useEffect(() => { setNotes(initialNotes); }, [initialNotes]);
+
+  const save = async (val: string) => {
+    const trimmed = val.trim();
+    setSaving(true);
+    await fetch(`/api/pantry/${itemId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: trimmed || null }),
+    });
+    queryClient.invalidateQueries({ queryKey: ["pantry", sessionEmail] });
+    setSaving(false);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <textarea
+        autoFocus
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        onBlur={() => save(notes)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); save(notes); }
+          if (e.key === "Escape") { setNotes(initialNotes); setEditing(false); }
+        }}
+        rows={2}
+        style={{
+          width: "100%", padding: "5px 8px", border: "1px solid var(--brand)",
+          borderRadius: "7px", fontSize: "12px", color: "var(--input-color)",
+          background: "var(--input-bg)", outline: "none", resize: "vertical",
+          minHeight: "48px", fontFamily: "inherit", opacity: saving ? 0.6 : 1,
+          boxSizing: "border-box",
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      onClick={() => setEditing(true)}
+      title="Click to add/edit notes"
+      style={{
+        fontSize: "12px", color: notes ? "var(--text-body)" : "var(--text-secondary)",
+        fontStyle: notes ? "normal" : "italic",
+        cursor: "text", padding: "5px 8px", borderRadius: "7px", minHeight: "32px",
+        border: "1px solid transparent", lineHeight: 1.4,
+        transition: "border-color 0.15s, background 0.15s",
+        whiteSpace: "pre-wrap", wordBreak: "break-word",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--input-border)";
+        (e.currentTarget as HTMLElement).style.background = "var(--input-bg)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+        (e.currentTarget as HTMLElement).style.background = "transparent";
+      }}
+    >
+      {notes || "Add a note…"}
     </div>
   );
 }
@@ -201,6 +286,9 @@ function PantryRow({
           />
           {badge && <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "var(" + badge.bgVar + ")", color: "var(" + badge.colorVar + ")", border: "1px solid var(" + badge.borderVar + ")", whiteSpace: "nowrap" }}>{badge.label}</span>}
         </div>
+      </td>
+      <td style={{ padding: "8px 16px", minWidth: "160px", maxWidth: "220px" }}>
+        <NotesCell itemId={item.id} initialNotes={item.notes ?? ""} sessionEmail={sessionEmail} />
       </td>
       <td style={{ padding: "13px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
@@ -337,6 +425,8 @@ function GroupedRow({
         </td>
         {/* Expiry — blank at group level */}
         <td style={{ padding: "13px 16px" }} />
+        {/* Notes — blank at group level */}
+        <td style={{ padding: "13px 16px" }} />
         {/* Actions hint */}
         <td style={{ padding: "13px 16px", textAlign: "center" }}>
           <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontStyle: "italic" }}>
@@ -353,7 +443,7 @@ function GroupedRow({
 
       {/* Closing accent border */}
       {isExpanded && (
-        <tr><td colSpan={7} style={{ padding: 0, height: "3px", background: "var(--brand)", opacity: 0.25 }} /></tr>
+        <tr><td colSpan={8} style={{ padding: 0, height: "3px", background: "var(--brand)", opacity: 0.25 }} /></tr>
       )}
     </>
   );
@@ -514,6 +604,7 @@ export default function PantryPage() {
                   <th style={thStyle("unitLabel")} onClick={() => handleSort("unitLabel")}>Unit <SortIcon field="unitLabel" sortField={sortField} sortDir={sortDir} /></th>
                   <th style={{ ...thStyle("lowThreshold"), textAlign: "center" }} onClick={() => handleSort("lowThreshold")}>Threshold <SortIcon field="lowThreshold" sortField={sortField} sortDir={sortDir} /></th>
                   <th style={thStyle("expirationDate")} onClick={() => handleSort("expirationDate")}>Expiration Date <SortIcon field="expirationDate" sortField={sortField} sortDir={sortDir} /></th>
+                  <th style={{ ...thStyle("notes"), cursor: "default" }}>Notes</th>
                   <th style={{ ...thStyle("itemName" as SortField), cursor: "default", textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
@@ -529,7 +620,7 @@ export default function PantryPage() {
                     )
                   )
                 ) : (
-                  <tr><td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
+                  <tr><td colSpan={8} style={{ padding: "48px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
                     {allItems.length === 0 ? "Your pantry is empty — add your first item!" : "No items match your search."}
                   </td></tr>
                 )}

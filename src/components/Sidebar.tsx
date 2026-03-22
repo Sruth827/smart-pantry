@@ -128,7 +128,7 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         gap: "8px",
       }}>
         <Image
-          src="/Logo_Side.png"
+          src="/Logo_Text_Side.png"
           alt="PantryMonium"
           width={180}
           height={54}

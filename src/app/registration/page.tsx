@@ -70,7 +70,7 @@ export default function RegisterPage() {
                     background: '#2D3748', padding: '36px 32px 28px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                    <Image src="/Logo_Bottom.png" alt="PantryMonium" width={200} height={200} style={{ objectFit: 'contain' }} priority />
+                    <Image src="/Logo_Text_Bottom.png" alt="PantryMonium" width={200} height={200} style={{ objectFit: 'contain' }} priority />
                 </div>
 
                 {/* Form section */}

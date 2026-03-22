@@ -18,6 +18,7 @@ export async function createPantryItem(prevState: any, formData: FormData) {
   const unitLabel = formData.get("unitLabel") as string || "pcs";
   const categoryId = formData.get("categoryId") as string;
   const expirationDate = formData.get("expirationDate") as string;
+  const notes = (formData.get("notes") as string) || null;
 
   try {
     // ── Threshold migration: check for existing siblings BEFORE creating ──────
@@ -57,6 +58,7 @@ export async function createPantryItem(prevState: any, formData: FormData) {
         quantity,
         unitLabel,
         lowThreshold: inheritedThreshold,
+        notes: notes || null,
         expirationDate: expirationDate
           ? new Date(expirationDate)
           : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
