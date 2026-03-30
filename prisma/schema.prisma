@@ -12,10 +12,6 @@ enum Role {
   USER
 }
 
-enum UnitPref {
-  Imperial
-  Metric
-}
 
 model User {
   id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
