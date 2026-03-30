@@ -22,31 +22,68 @@ export async function createPantryItem(prevState: any, formData: FormData) {
 
   const itemName = formData.get("itemName") as string;
   const quantity = parseFloat(formData.get("quantity") as string) || 1;
-  const unitLabel = (formData.get("unitLabel") as string) || "pcs";
+  const unitLabel = formData.get("unitLabel") as string || "pcs";
   const categoryId = formData.get("categoryId") as string;
   const expirationDate = formData.get("expirationDate") as string;
+  const notes = (formData.get("notes") as string) || null;
 
   try {
+    // ── Threshold migration: check for existing siblings BEFORE creating ──────
+    // Find all existing items with the same name (case-insensitive) for this user
+    const siblings = await db.pantryItem.findMany({
+      where: {
+        userId: session.user.id,
+        itemName: { equals: itemName, mode: "insensitive" },
+      },
+    });
+
+    // Determine the threshold to use for the new item:
+    // - If there is exactly 1 sibling, it may have a threshold set → this becomes the group threshold
+    // - If there are already 2+ siblings, all should share the same threshold → use theirs
+    // - If there are no siblings, no threshold migration needed
+    let inheritedThreshold = 0;
+    if (siblings.length === 1) {
+      // Going from 1 → 2: promote the singleton's threshold to become the group threshold
+      const singletonThreshold = Number(siblings[0].lowThreshold);
+      if (singletonThreshold > 0) {
+        inheritedThreshold = singletonThreshold;
+        // Zero out the existing singleton's threshold (now managed at group level)
+        await db.pantryItem.update({
+          where: { id: siblings[0].id },
+          data: { lowThreshold: 0 },
+        });
+      }
+    } else if (siblings.length >= 2) {
+      // Already a group — inherit whatever group threshold the siblings share
+      const groupThreshold = Number(siblings[0].lowThreshold);
+      if (groupThreshold > 0) inheritedThreshold = groupThreshold;
+    }
+
     const newItem = await db.pantryItem.create({
       data: {
         itemName,
         quantity,
         unitLabel,
+        lowThreshold: inheritedThreshold,
+        notes: notes || null,
         expirationDate: expirationDate
           ? new Date(expirationDate)
           : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-
-        user: {
-          connect: { id: dbUser.id },
-        },
-
-        ...(categoryId && {
-          category: { connect: { id: categoryId } },
-        }),
+        user: { connect: { id: session.user.id } },
+        ...(categoryId && { category: { connect: { id: categoryId } } }),
       },
     });
 
     revalidatePath("/dashboard");
+    return {
+      success: true, item: {
+        ...newItem,
+        quantity: Number(newItem.quantity),
+        lowThreshold: Number(newItem.lowThreshold),
+        expirationDate: newItem.expirationDate!.toISOString(),
+        updatedAt: newItem.updatedAt.toISOString(),
+      }
+    };
 
     return {
       success: true,

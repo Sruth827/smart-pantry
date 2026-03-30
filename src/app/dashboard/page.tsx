@@ -1,106 +1,203 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import AppShell from "@/components/AppShell";
+import FirstTimeOnboarding from "@/components/FirstTimeOnboarding";
 import Link from "next/link";
-import { useSession, signOut } from 'next-auth/react';
-import { useQuery } from '@tanstack/react-query';
-import AddItemForm  from "@/components/addItemModal";
-import DeleteButton from "@/components/DeleteButton";
-import QuantityAdjuster from "@/components/QuantityAdjuster";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
+function StatCard({
+  label, value, sub, iconBgVar, icon, href,
+}: {
+  label: string; value: number | string; sub?: string;
+  iconBgVar: string; icon: React.ReactNode; href: string;
+}) {
+  return (
+    <Link href={href} style={{ textDecoration: "none" }}>
+      <div
+        style={{
+          background: "var(--card-bg)", borderRadius: "16px", padding: "28px 24px",
+          border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)",
+          cursor: "pointer", transition: "all 0.2s", display: "flex",
+          alignItems: "center", gap: "20px",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.15)";
+          (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.boxShadow = "var(--card-shadow)";
+          (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+        }}
+      >
+        <div style={{
+          width: "56px", height: "56px", borderRadius: "14px",
+          background: `var(${iconBgVar})`, display: "flex", alignItems: "center",
+          justifyContent: "center", fontSize: "26px", flexShrink: 0,
+        }}>{icon}</div>
+        <div>
+          <div style={{ fontSize: "32px", fontWeight: 800, color: "var(--foreground)", lineHeight: 1 }}>{value}</div>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-body)", marginTop: "4px" }}>{label}</div>
+          {sub && <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>{sub}</div>}
+        </div>
+      </div>
+    </Link>
+  );
+}
 
+function RecentAlertItem({ item }: { item: any }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const [y, m, d] = item.expirationDate.split("T")[0].split("-").map(Number);
+  const exp = new Date(y, m - 1, d);
+  const diffDays = Math.round((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const isExpired = diffDays < 0;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "12px 16px", borderRadius: "10px",
+      background: isExpired ? "var(--alert-expired-bg)" : "var(--alert-soon-bg)",
+      border: `1px solid ${isExpired ? "var(--alert-expired-border)" : "var(--alert-soon-border)"}`,
+      marginBottom: "8px",
+    }}>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--foreground)" }}>{item.itemName}</div>
+        <div style={{ fontSize: "12px", color: "var(--text-body)" }}>
+          {isExpired ? `Expired ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""} ago`
+            : `Expires in ${diffDays} day${diffDays !== 1 ? "s" : ""}`}
+        </div>
+      </div>
+      <span style={{
+        padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 700,
+        background: isExpired ? "var(--alert-expired-bg)" : "var(--alert-soon-bg)",
+        color: isExpired ? "var(--alert-expired-text)" : "var(--alert-soon-text)",
+        border: `1px solid ${isExpired ? "var(--alert-expired-border)" : "var(--alert-soon-border)"}`,
+      }}>{isExpired ? "EXPIRED" : "SOON"}</span>
+    </div>
+  );
+}
 
+function LowStockItem({ item }: { item: any }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "12px 16px", borderRadius: "10px",
+      background: "var(--alert-low-bg)", border: "1px solid var(--alert-low-border)", marginBottom: "8px",
+    }}>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--foreground)" }}>{item.itemName}</div>
+        <div style={{ fontSize: "12px", color: "var(--text-body)" }}>
+          {Number(item.quantity)} {item.unitLabel || "units"} remaining
+        </div>
+      </div>
+      <span style={{
+        padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 700,
+        background: "var(--alert-low-badge-bg)", color: "var(--alert-low-text)",
+      }}>LOW</span>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
-    // session is required: true, so users are kicked out if they aren't logged in
-    const { data: session, status } = useSession({ required: true });
+  const { data: session, status } = useSession({ required: true });
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
-    const { data, isLoading : itemsLoading, error } = useQuery({
-        queryKey: ['pantry', session?.user?.email],
-        queryFn: () => fetch('/api/pantry').then(res => res.json()),
-        enabled: status === "authenticated", 
-    });
+  // Once session is ready, decide whether to show onboarding.
+  // We use a local state so dismissing the modal doesn't require a session reload.
+  const resolvedOnboarding = (() => {
+    if (showOnboarding !== null) return showOnboarding;
+    if (status === "authenticated") return session?.user?.isFirstLogin ?? false;
+    return false;
+  })();
 
-    const { data: categories, isLoading: catsLoading } = useQuery({
-        queryKey: ['categories', session?.user?.email],
-        queryFn: () => fetch('/api/categories').then(res => res.json()),
-        enabled: status === "authenticated",
-    });
+  const { data: pantryData, isLoading } = useQuery({
+    queryKey: ["pantry", session?.user?.email],
+    queryFn: () => fetch("/api/pantry").then((r) => r.json()),
+    enabled: status === "authenticated",
+  });
 
-    if (status === "loading" || itemsLoading || catsLoading) {
-        return <div className="p-8 text-center">Checking the shelves...</div>;
-    }
-    if (error) return <div>Oops! Something went wrong.</div>;
-
-
+  if (status === "loading" || isLoading) {
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* navigation bar */}
-            <nav className="bg-white border-b px-8 py-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-green-700">ShelfControl</h1>
-                <div className="flex items-center gap-4">
-
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">My Pantry</h1>
-
-                        <AddItemForm categories={categories || []} />
-                            {/* The Scan Button */}
-                            <Link 
-                                href="/scan" 
-                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                            >
-                            <span>Scan Barcode</span>
-                            </Link>
-                        </div>
-                    
-                    <span className="text-sm text-gray-600">{session?.user?.email}</span>
-                    <button
-                        onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors text-sm font-medium"
-                    >
-                        Log Out
-                    </button>
-                </div>
-            </nav>
-
-            {/* content */}
-            <main className="p-8">
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <h2 className="text-2xl font-semibold mb-2">Pantry Dashboard</h2>
-                    <p className="text-gray-500">Welcome back to your smart pantry manager, {session?.user?.name || 'Chef'}.</p>
-                </div>
-                <br></br>         
-                <br></br>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {data?.map((category: any) => (
-                <section key={category.id} className="bg-white p-4 rounded-lg shadow-md border border-gray-100">
-                    <h3 className="font-bold text-lg text-green-800 mb-4 border-b pb-2">
-                        {category.name}
-                    </h3>
-                
-                    {category.items && category.items.length > 0 ? (
-                        <ul className="space-y-3">
-                            {category.items.map((item: any) => (
-                                <li key={item.id} className="flex justify-between items-center bg-black-50 p-2 rounded">
-                                    <span className="font-medium text-gray-800">{item.itemName}</span>
-                                    <div className="flex items-center gap-4 font-medium text-gray-800">
-                                    <QuantityAdjuster 
-                                        itemId={item.id} 
-                                        currentQty={Number(item.quantity)} 
-                                    />
-                                    <DeleteButton itemId={item.id} />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                    <p className="text-gray-400 text-sm italic py-4">This shelf is empty.</p>
-                )}
-                </section>
-                    ))}
-                </div>
-            </main>
-        </div>
+      <AppShell>
+        <div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading your pantry...</div>
+      </AppShell>
     );
+  }
+
+  const allItems: any[] = [];
+  if (Array.isArray(pantryData)) {
+    pantryData.forEach((cat: any) => { if (cat.items) allItems.push(...cat.items); });
+  }
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const parseLocal = (s: string) => { const [y,m,d] = s.split("T")[0].split("-").map(Number); return new Date(y,m-1,d); };
+
+  const totalItems = allItems.length;
+  const lowStockItems = allItems.filter(
+    (item) => Number(item.quantity) <= Number(item.lowThreshold) && Number(item.lowThreshold) > 0
+  );
+  const expiringItems = allItems
+    .filter((item) => {
+      if (!item.expirationDate) return false;
+      const diffDays = Math.round((parseLocal(item.expirationDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return diffDays <= 7;
+    })
+    .sort((a, b) => parseLocal(a.expirationDate).getTime() - parseLocal(b.expirationDate).getTime());
+
+  const categoryCount = Array.isArray(pantryData) ? pantryData.length : 0;
+  const recentAlerts = expiringItems.slice(0, 5);
+  const recentLowStock = lowStockItems.slice(0, 5);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  return (
+    <AppShell>
+      {resolvedOnboarding && (
+        <FirstTimeOnboarding
+          userName={session?.user?.name || "there"}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
+      <div style={{ padding: "40px 48px" }}>
+        <div style={{ marginBottom: "36px" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>
+            {greeting}, {session?.user?.name?.split(" ")[0] || "Chef"} 👋
+          </h1>
+          <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
+            Here's what's happening in your pantry today.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+          <StatCard label="Total Items" value={totalItems} sub={`Across ${categoryCount} categories`} iconBgVar="--stat-icon-blue" icon="🥫" href="/pantry" />
+          <StatCard label="Low in Stock" value={lowStockItems.length} sub="Need restocking" iconBgVar="--stat-icon-orange" icon="🛒" href="/shopping" />
+          <StatCard label="Expiring Soon" value={expiringItems.length} sub="Within 7 days" iconBgVar="--stat-icon-red" icon="⏰" href="/alerts" />
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "24px", border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--foreground)", margin: 0 }}>🔔 Expiry Alerts</h2>
+              <Link href="/alerts" style={{ fontSize: "13px", color: "var(--brand)", fontWeight: 600, textDecoration: "none" }}>View all →</Link>
+            </div>
+            {recentAlerts.length > 0 ? recentAlerts.map((item) => <RecentAlertItem key={item.id} item={item} />) : (
+              <div style={{ textAlign: "center", padding: "32px", color: "var(--text-secondary)", fontSize: "14px" }}>✅ No items expiring soon!</div>
+            )}
+          </div>
+
+          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "24px", border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--foreground)", margin: 0 }}>🛒 Low Stock</h2>
+              <Link href="/shopping" style={{ fontSize: "13px", color: "var(--brand)", fontWeight: 600, textDecoration: "none" }}>View all →</Link>
+            </div>
+            {recentLowStock.length > 0 ? recentLowStock.map((item) => <LowStockItem key={item.id} item={item} />) : (
+              <div style={{ textAlign: "center", padding: "32px", color: "var(--text-secondary)", fontSize: "14px" }}>✅ All items are well stocked!</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
 }

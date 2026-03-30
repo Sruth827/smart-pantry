@@ -18,17 +18,19 @@ enum UnitPref {
 }
 
 model User {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fullName     String       @map("full_name") @db.VarChar(100)
-  email        String       @unique @db.VarChar(255)
-  passwordHash String       @map("password_hash")
-  unitPref     UnitPref     @default(Metric) @map("unit_pref")
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName           String       @map("full_name") @db.VarChar(100)
+  email              String       @unique @db.VarChar(255)
+  passwordHash       String       @map("password_hash")
+  unitPref           UnitPref     @default(Metric) @map("unit_pref")
   role         Role         @default(USER)
-  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  emailVerified      Boolean      @default(false) @map("email_verified")
+  hasLoggedInBefore  Boolean      @default(false) @map("has_logged_in_before")
 
-  categories   Category[]
-  pantryItems  PantryItem[]
-
+  categories         Category[]
+  pantryItems        PantryItem[]
+  shoppingItems      ShoppingItem[]
   @@map("users")
 }
 
@@ -54,10 +56,31 @@ model PantryItem {
   unitLabel      String?   @map("unit_label") @db.VarChar(20)
   lowThreshold   Decimal   @default(0) @map("low_threshold") @db.Decimal(10, 2)
   expirationDate DateTime? @map("expiration_date") @db.Date
+  notes          String?   @db.Text
   updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   category       Category? @relation(fields: [categoryId], references: [id])
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("pantry_items")
+}
+
+model ShoppingItem {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  itemName      String    @map("item_name") @db.VarChar(100)
+  quantity      String?   @db.VarChar(50)
+  source        String?   @db.VarChar(50)   // e.g. "recipe"
+  sourceLabel   String?   @map("source_label") @db.VarChar(100) // e.g. recipe title
+  checked       Boolean   @default(false)
+  addedAt       DateTime  @default(now()) @map("added_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("shopping_items")
+}
+
+enum UnitPref {
+  Imperial
+  Metric
 }

@@ -12,7 +12,7 @@ export default async function ScanPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-[#F5F0EB] py-12">
       <Scanner categories={categories} />
     </div>
   );
