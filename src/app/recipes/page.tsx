@@ -45,7 +45,12 @@ export default function RecipesPage() {
     });
   };
 
-  const filteredPopupItems = allItems.filter((i) =>
+  // Deduplicate by itemName so each ingredient appears only once in the popup
+  const uniqueItemsByName = allItems.filter(
+    (item, index, arr) => arr.findIndex((i) => i.itemName === item.itemName) === index
+  );
+
+  const filteredPopupItems = uniqueItemsByName.filter((i) =>
     i.itemName.toLowerCase().includes(filterSearch.toLowerCase())
   );
 
@@ -86,7 +91,24 @@ export default function RecipesPage() {
       const res = await fetch(`/api/recipes?ingredients=${encodeURIComponent(ingredientNames)}`);
       const data = await res.json();
       if (data.error) { setError(data.error); setRecipes([]); }
-      else setRecipes(data);
+      else {
+        // Filter out recipes that use any excluded ingredient
+        const excluded = excludedItems;
+        const filtered = data.filter((recipe: any) => {
+          const allRecipeIngredients = [
+            ...(recipe.usedIngredients || []),
+            ...(recipe.missedIngredients || []),
+          ];
+          return !allRecipeIngredients.some((ing: any) =>
+            excluded.has((ing.name || "").toLowerCase()) ||
+            Array.from(excluded).some((ex) =>
+              (ing.name || "").toLowerCase().includes(ex.toLowerCase()) ||
+              ex.toLowerCase().includes((ing.name || "").toLowerCase())
+            )
+          );
+        });
+        setRecipes(filtered);
+      }
     } catch {
       setError("Failed to search recipes. Check your API key configuration.");
     } finally {
