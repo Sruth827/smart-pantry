@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import path from "path";
 
 // ─── SMTP Transport ───────────────────────────────────────────────────────────
 // GoDaddy uses their own SMTP relay. Configure via environment variables.
@@ -27,6 +28,11 @@ const transporter = nodemailer.createTransport({
 const FROM = `"${process.env.EMAIL_FROM_NAME ?? "PantryMonium"}" <${process.env.EMAIL_USER ?? ""}>`;
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
+// ─── Logo (inline attachment) ─────────────────────────────────────────────────
+
+const LOGO_PATH = path.join(process.cwd(), "public", "Logo_Text_Side.png");
+const LOGO_CID  = "pantrymonium-logo@app";
+
 // ─── Shared HTML wrapper ──────────────────────────────────────────────────────
 
 function wrapHtml(title: string, bodyHtml: string): string {
@@ -39,9 +45,8 @@ function wrapHtml(title: string, bodyHtml: string): string {
   <style>
     body { margin: 0; padding: 0; background: #F5F0EB; font-family: Arial, Helvetica, sans-serif; }
     .wrapper { max-width: 560px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-    .header  { background: linear-gradient(135deg, #2D3748 0%, #4A6FA5 100%); padding: 32px 40px; text-align: center; }
-    .header h1 { margin: 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-    .header p  { margin: 6px 0 0; color: rgba(255,255,255,0.7); font-size: 13px; }
+    .header  { background: linear-gradient(135deg, #2D3748 0%, #4A6FA5 100%); padding: 28px 40px; text-align: center; }
+    .header img { max-height: 64px; width: auto; display: block; margin: 0 auto; }
     .body    { padding: 36px 40px; }
     .body h2 { margin: 0 0 12px; font-size: 20px; font-weight: 700; color: #2D3748; }
     .body p  { margin: 0 0 16px; font-size: 15px; color: #4A5568; line-height: 1.6; }
@@ -60,8 +65,7 @@ function wrapHtml(title: string, bodyHtml: string): string {
 <body>
   <div class="wrapper">
     <div class="header">
-      <h1>🥫 PantryMonium</h1>
-      <p>Your Pantry, Perfectly Remembered</p>
+      <img src="cid:${LOGO_CID}" alt="PantryMonium" />
     </div>
     <div class="body">
       ${bodyHtml}
@@ -73,6 +77,20 @@ function wrapHtml(title: string, bodyHtml: string): string {
   </div>
 </body>
 </html>`;
+}
+
+// ─── Helper: attach logo to every outbound mail ───────────────────────────────
+
+function logoAttachment() {
+  try {
+    return [{
+      filename: "Logo_Text_Side.png",
+      path:     LOGO_PATH,
+      cid:      LOGO_CID,
+    }];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Email: Welcome / Account Created ─────────────────────────────────────────
@@ -122,6 +140,7 @@ export async function sendWelcomeEmail(to: string, fullName: string) {
     subject: "Welcome to PantryMonium! Your account is ready 🥫",
     html,
     text: `Welcome to PantryMonium, ${firstName}!\n\nYour account has been created successfully.\nEmail: ${to}\n\nLog in at: ${APP_URL}/login`,
+    attachments: logoAttachment(),
   });
 }
 
@@ -137,8 +156,8 @@ export async function sendAccountUpdatedEmail(
   const changeRows = changes
     .map((c) => `
       <div class="detail-row">
-        <span class="detail-label">${c.field}</span>
-        <span class="detail-value">${c.newValue}</span>
+        <span class="detail-label">${c.field} Updated</span>
+        <span class="detail-value">✓</span>
       </div>`)
     .join("");
 
@@ -165,7 +184,8 @@ export async function sendAccountUpdatedEmail(
     to,
     subject: "Your PantryMonium account has been updated",
     html,
-    text: `Hi ${firstName},\n\nYour account was updated.\nChanges: ${changes.map((c) => `${c.field}: ${c.newValue}`).join(", ")}\n\nIf this wasn't you, log in and change your password immediately: ${APP_URL}/login`,
+    text: `Hi ${firstName},\n\nYour account was updated.\nChanges: ${changes.map((c) => `${c.field} Updated`).join(", ")}\n\nIf this wasn't you, log in and change your password immediately: ${APP_URL}/login`,
+    attachments: logoAttachment(),
   });
 }
 
@@ -197,5 +217,6 @@ export async function sendPasswordChangedEmail(to: string, fullName: string) {
     subject: "Your PantryMonium password has been changed",
     html,
     text: `Hi ${firstName},\n\nYour PantryMonium password was changed successfully.\n\nIf this wasn't you, sign in immediately and change your password: ${APP_URL}/login`,
+    attachments: logoAttachment(),
   });
 }
