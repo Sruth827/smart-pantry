@@ -456,6 +456,370 @@ function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: 
   return <span style={{ color: "var(--brand)", marginLeft: "4px" }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
 }
 
+// --- Bulk Add Modal ---
+
+const CSV_HEADERS = ["Item Name", "Category", "Quantity", "Unit", "Low Stock Threshold", "Expiration Date (YYYY-MM-DD)", "Notes"];
+const CSV_EXAMPLE_ROWS = [
+  ["Whole Milk", "Dairy", "2", "L", "1", "2025-12-31", "Full fat"],
+  ["Chicken Breast", "Meat", "500", "g", "200", "", "Frozen"],
+  ["Olive Oil", "Pantry", "1", "bottle", "0", "", ""],
+];
+
+function downloadCsvTemplate() {
+  const rows = [CSV_HEADERS, ...CSV_EXAMPLE_ROWS];
+  const csv = rows.map((r) => r.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "smart-pantry-bulk-add-template.csv";
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+type ParsedRow = {
+  itemName: string; category: string; quantity: number;
+  unitLabel: string; lowThreshold: number; expirationDate: string; notes: string;
+  error?: string;
+};
+
+function parseCsvText(text: string): ParsedRow[] {
+  // Split on newlines, skip blank lines
+  const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+  if (lines.length === 0) return [];
+
+  // Try to detect if first line is a header by checking if first cell is non-numeric and matches known header
+  const firstCell = lines[0].split(",")[0].replace(/^"|"$/g, "").trim().toLowerCase();
+  const isHeader = firstCell === "item name" || firstCell === "itemname";
+  const dataLines = isHeader ? lines.slice(1) : lines;
+
+  return dataLines.filter((l) => l.trim()).map((line): ParsedRow => {
+    // Handle quoted CSV fields
+    const fields: string[] = [];
+    let cur = ""; let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === "," && !inQuotes) { fields.push(cur.trim()); cur = ""; }
+      else cur += ch;
+    }
+    fields.push(cur.trim());
+
+    const [rawName, rawCat, rawQty, rawUnit, rawThresh, rawExp, rawNotes] = fields;
+    const itemName = rawName?.replace(/^"|"$/g, "").trim() ?? "";
+    if (!itemName) return { itemName: "", category: "", quantity: 0, unitLabel: "", lowThreshold: 0, expirationDate: "", notes: "", error: "Missing item name" };
+
+    const qty = parseFloat(rawQty ?? "0") || 0;
+    const threshold = parseFloat(rawThresh ?? "0") || 0;
+    const expDate = (rawExp ?? "").replace(/^"|"$/g, "").trim();
+    const expValid = !expDate || /^\d{4}-\d{2}-\d{2}$/.test(expDate);
+
+    return {
+      itemName,
+      category: (rawCat ?? "").replace(/^"|"$/g, "").trim(),
+      quantity: qty,
+      unitLabel: (rawUnit ?? "").replace(/^"|"$/g, "").trim(),
+      lowThreshold: threshold,
+      expirationDate: expDate,
+      notes: (rawNotes ?? "").replace(/^"|"$/g, "").trim(),
+      ...((!expValid) && { error: `Invalid date "${expDate}" — use YYYY-MM-DD` }),
+    };
+  });
+}
+
+function BulkAddModal({
+  categories,
+  onClose,
+  onImported,
+}: {
+  categories: any[];
+  onClose: () => void;
+  onImported: (count: number) => void;
+}) {
+  const [step, setStep] = useState<"upload" | "preview" | "done">("upload");
+  const [rows, setRows] = useState<ParsedRow[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useState<HTMLInputElement | null>(null);
+
+  const handleFile = (file: File) => {
+    if (!file.name.endsWith(".csv") && file.type !== "text/csv") {
+      setImportError("Please upload a .csv file."); return;
+    }
+    setImportError("");
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const parsed = parseCsvText(text);
+      if (parsed.length === 0) { setImportError("The CSV file appears to be empty."); return; }
+      setRows(parsed);
+      setStep("preview");
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  const validRows = rows.filter((r) => !r.error && r.itemName);
+  const errorRows = rows.filter((r) => r.error || !r.itemName);
+
+  const catByName = useMemo<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    (categories || []).forEach((c: any) => { map[c.name.toLowerCase()] = c.id; });
+    return map;
+  }, [categories]);
+
+  const handleImport = async () => {
+    setImporting(true);
+    try {
+      await Promise.all(
+        validRows.map((row) =>
+          fetch("/api/pantry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              itemName: row.itemName,
+              quantity: row.quantity || 1,
+              unitLabel: row.unitLabel || null,
+              categoryId: catByName[row.category.toLowerCase()] ?? null,
+              lowThreshold: row.lowThreshold || 0,
+              expirationDate: row.expirationDate || null,
+              notes: row.notes || null,
+            }),
+          })
+        )
+      );
+      setStep("done");
+      onImported(validRows.length);
+    } catch {
+      setImportError("Something went wrong while importing. Please try again.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", border: "1px solid var(--input-border)", borderRadius: "8px",
+    padding: "9px 12px", fontSize: "13px", color: "var(--input-color)",
+    background: "var(--input-bg)", outline: "none", boxSizing: "border-box",
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: "var(--card-bg)", borderRadius: "18px", width: "100%", maxWidth: step === "preview" ? "820px" : "520px", maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 72px rgba(0,0,0,0.35)", overflow: "hidden", animation: "modalIn 0.18s ease", border: "1px solid var(--card-border)" }}
+      >
+        {/* Header */}
+        <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-subtle)", flexShrink: 0 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: "17px", fontWeight: 800, color: "var(--foreground)" }}>
+              {step === "upload" && "Bulk Add Items"}
+              {step === "preview" && `Preview — ${rows.length} row${rows.length !== 1 ? "s" : ""} found`}
+              {step === "done" && "Import Complete!"}
+            </h2>
+            <p style={{ margin: "3px 0 0", fontSize: "13px", color: "var(--text-secondary)" }}>
+              {step === "upload" && "Download the template, fill it in, then upload it here."}
+              {step === "preview" && `${validRows.length} valid · ${errorRows.length} with issues`}
+              {step === "done" && `${validRows.length} item${validRows.length !== 1 ? "s" : ""} added to your pantry.`}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px" }}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY: "auto", flex: 1 }}>
+
+          {/* ── Step 1: Upload ── */}
+          {step === "upload" && (
+            <div style={{ padding: "24px" }}>
+              {/* Download template */}
+              <div style={{ marginBottom: "24px", padding: "18px 20px", background: "var(--surface-subtle)", borderRadius: "12px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{ fontSize: "32px", flexShrink: 0 }}>📄</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--foreground)", marginBottom: "3px" }}>Step 1 — Download the CSV Template</div>
+                  <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Pre-formatted with the correct columns. Includes example rows to guide you.</div>
+                </div>
+                <button
+                  onClick={downloadCsvTemplate}
+                  style={{ padding: "9px 16px", borderRadius: "9px", background: "var(--brand)", color: "#fff", fontWeight: 700, fontSize: "13px", border: "none", cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download Template
+                </button>
+              </div>
+
+              {/* Column reference */}
+              <div style={{ marginBottom: "24px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-body)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Column Reference</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                  {[
+                    { col: "Item Name", note: "Required. e.g. Whole Milk" },
+                    { col: "Category", note: "Optional. Must match an existing category name." },
+                    { col: "Quantity", note: "Optional. Numeric. Defaults to 1." },
+                    { col: "Unit", note: "Optional. e.g. kg, L, cans, bottle" },
+                    { col: "Low Stock Threshold", note: "Optional. Numeric. Triggers low-stock alert." },
+                    { col: "Expiration Date", note: "Optional. Format: YYYY-MM-DD" },
+                    { col: "Notes", note: "Optional. Any free-text notes." },
+                  ].map(({ col, note }) => (
+                    <div key={col} style={{ padding: "8px 12px", background: "var(--surface-subtle)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                      <div style={{ fontWeight: 700, fontSize: "12px", color: "var(--foreground)", marginBottom: "2px" }}>{col}</div>
+                      <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{note}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Upload zone */}
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-body)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Step 2 — Upload Your Filled CSV</div>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file"; input.accept = ".csv,text/csv";
+                  input.onchange = (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) handleFile(f); };
+                  input.click();
+                }}
+                style={{ border: `2px dashed ${dragOver ? "var(--brand)" : "var(--border)"}`, borderRadius: "12px", padding: "36px 24px", textAlign: "center", cursor: "pointer", background: dragOver ? "color-mix(in srgb, var(--brand) 5%, var(--card-bg))" : "var(--surface-subtle)", transition: "all 0.15s" }}
+              >
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>📂</div>
+                <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--foreground)", marginBottom: "4px" }}>Drop your CSV here</div>
+                <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>or <span style={{ color: "var(--brand)", fontWeight: 600 }}>click to browse</span></div>
+              </div>
+
+              {importError && (
+                <div style={{ marginTop: "14px", padding: "10px 14px", background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)", borderRadius: "8px", color: "var(--alert-expired-text)", fontSize: "13px" }}>
+                  ⚠️ {importError}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 2: Preview ── */}
+          {step === "preview" && (
+            <div style={{ padding: "0" }}>
+              {errorRows.length > 0 && (
+                <div style={{ padding: "12px 20px", background: "var(--alert-expired-bg)", borderBottom: "1px solid var(--alert-expired-border)", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "16px" }}>⚠️</span>
+                  <span style={{ fontSize: "13px", color: "var(--alert-expired-text)", fontWeight: 600 }}>
+                    {errorRows.length} row{errorRows.length !== 1 ? "s" : ""} have issues and will be skipped. Only the {validRows.length} valid row{validRows.length !== 1 ? "s" : ""} will be imported.
+                  </span>
+                </div>
+              )}
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                  <thead>
+                    <tr style={{ background: "var(--surface-subtle)", borderBottom: "2px solid var(--border)" }}>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-body)", whiteSpace: "nowrap" }}>Status</th>
+                      {["Item Name", "Category", "Qty", "Unit", "Threshold", "Exp. Date", "Notes"].map((h) => (
+                        <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-body)", whiteSpace: "nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, i) => {
+                      const hasError = !!row.error || !row.itemName;
+                      const catMatch = row.category ? catByName[row.category.toLowerCase()] : true;
+                      return (
+                        <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: hasError ? "var(--alert-expired-bg)" : "var(--card-bg)", opacity: hasError ? 0.7 : 1 }}>
+                          <td style={{ padding: "10px 14px", whiteSpace: "nowrap" }}>
+                            {hasError ? (
+                              <span title={row.error} style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 700, color: "var(--alert-expired-text)", background: "var(--alert-expired-bg)", padding: "2px 8px", borderRadius: "20px", border: "1px solid var(--alert-expired-border)" }}>
+                                ✕ Skip
+                              </span>
+                            ) : (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 700, color: "var(--brand)", background: "color-mix(in srgb, var(--brand) 10%, var(--card-bg))", padding: "2px 8px", borderRadius: "20px", border: "1px solid color-mix(in srgb, var(--brand) 30%, transparent)" }}>
+                                ✓ Import
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: "10px 14px", fontWeight: 600, color: "var(--foreground)" }}>{row.itemName || <em style={{ color: "var(--alert-expired-text)" }}>missing</em>}</td>
+                          <td style={{ padding: "10px 14px", color: catMatch ? "var(--text-body)" : "var(--alert-soon-text)" }}>
+                            {row.category || <span style={{ color: "var(--text-secondary)" }}>—</span>}
+                            {row.category && !catByName[row.category.toLowerCase()] && <span style={{ fontSize: "10px", color: "var(--alert-soon-text)", marginLeft: "4px" }}>(new)</span>}
+                          </td>
+                          <td style={{ padding: "10px 14px", color: "var(--text-body)" }}>{row.quantity || <span style={{ color: "var(--text-secondary)" }}>—</span>}</td>
+                          <td style={{ padding: "10px 14px", color: "var(--text-body)" }}>{row.unitLabel || <span style={{ color: "var(--text-secondary)" }}>—</span>}</td>
+                          <td style={{ padding: "10px 14px", color: "var(--text-body)" }}>{row.lowThreshold || <span style={{ color: "var(--text-secondary)" }}>—</span>}</td>
+                          <td style={{ padding: "10px 14px", color: row.error?.includes("date") ? "var(--alert-expired-text)" : "var(--text-body)" }}>{row.expirationDate || <span style={{ color: "var(--text-secondary)" }}>—</span>}</td>
+                          <td style={{ padding: "10px 14px", color: "var(--text-body)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.notes || <span style={{ color: "var(--text-secondary)" }}>—</span>}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {importError && (
+                <div style={{ margin: "16px 20px", padding: "10px 14px", background: "var(--alert-expired-bg)", border: "1px solid var(--alert-expired-border)", borderRadius: "8px", color: "var(--alert-expired-text)", fontSize: "13px" }}>
+                  ⚠️ {importError}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 3: Done ── */}
+          {step === "done" && (
+            <div style={{ padding: "48px 24px", textAlign: "center" }}>
+              <div style={{ fontSize: "56px", marginBottom: "16px" }}>🎉</div>
+              <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--foreground)", margin: "0 0 8px" }}>All done!</h3>
+              <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: "0 0 24px" }}>
+                {validRows.length} item{validRows.length !== 1 ? "s were" : " was"} successfully added to your pantry.
+              </p>
+              <button onClick={onClose} style={{ padding: "10px 28px", borderRadius: "10px", background: "var(--brand)", color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer" }}>
+                View Pantry
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        {step !== "done" && (
+          <div style={{ padding: "14px 24px", borderTop: "1px solid var(--border)", display: "flex", gap: "10px", justifyContent: "flex-end", background: "var(--surface-subtle)", flexShrink: 0 }}>
+            {step === "preview" && (
+              <button onClick={() => { setStep("upload"); setRows([]); setImportError(""); }} style={{ padding: "9px 18px", borderRadius: "8px", fontSize: "14px", fontWeight: 500, background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)", border: "1px solid var(--btn-cancel-border)", cursor: "pointer" }}>
+                ← Back
+              </button>
+            )}
+            <button onClick={onClose} style={{ padding: "9px 18px", borderRadius: "8px", fontSize: "14px", fontWeight: 500, background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)", border: "1px solid var(--btn-cancel-border)", cursor: "pointer" }}>
+              Cancel
+            </button>
+            {step === "preview" && validRows.length > 0 && (
+              <button
+                onClick={handleImport}
+                disabled={importing}
+                style={{ padding: "9px 22px", borderRadius: "8px", fontSize: "14px", fontWeight: 700, background: importing ? "#93b4d4" : "var(--brand)", color: "#fff", border: "none", cursor: importing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "7px" }}
+              >
+                {importing ? "Importing…" : (
+                  <>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Import {validRows.length} Item{validRows.length !== 1 ? "s" : ""}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      <style>{`@keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
+    </div>
+  );
+}
+
 // --- Page ---
 
 export default function PantryPage() {
@@ -467,6 +831,8 @@ export default function PantryPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [editingItem, setEditingItem]     = useState<any>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [showBulkAdd, setShowBulkAdd]     = useState(false);
+  const [bulkToast, setBulkToast]         = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["pantry", session?.user?.email],
@@ -575,6 +941,15 @@ export default function PantryPage() {
           </div>
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <Link href="/scan" style={{ padding: "10px 18px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid var(--btn-edit-border)" }}>📷 Scan Barcode</Link>
+            <button
+              onClick={() => setShowBulkAdd(true)}
+              style={{ padding: "10px 18px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", border: "1px solid var(--btn-edit-border)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Bulk Add
+            </button>
             <AddItemForm categories={categories || []} unitSystem={unitSystem} />
           </div>
         </div>
@@ -650,6 +1025,29 @@ export default function PantryPage() {
           onSaved={() => queryClient.invalidateQueries({ queryKey: ["pantry", session?.user?.email] })}
         />
       )}
+
+      {showBulkAdd && (
+        <BulkAddModal
+          categories={categories || []}
+          onClose={() => setShowBulkAdd(false)}
+          onImported={(count) => {
+            queryClient.invalidateQueries({ queryKey: ["pantry", session?.user?.email] });
+            setShowBulkAdd(false);
+            setBulkToast(`${count} item${count !== 1 ? "s" : ""} added to your pantry!`);
+            setTimeout(() => setBulkToast(null), 4000);
+          }}
+        />
+      )}
+
+      {bulkToast && (
+        <div style={{ position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)", background: "var(--foreground)", color: "var(--card-bg)", padding: "13px 24px", borderRadius: "10px", fontSize: "14px", fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", zIndex: 300, whiteSpace: "nowrap", animation: "toastSlideUp 0.2s ease" }}>
+          🎉 {bulkToast}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes toastSlideUp { from { opacity: 0; transform: translateX(-50%) translateY(12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+      `}</style>
     </AppShell>
   );
 }

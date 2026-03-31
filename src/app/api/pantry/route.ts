@@ -60,3 +60,47 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch pantry' }, { status: 500 });
   }
 }
+
+// POST /api/pantry — create a new pantry item (used by shopping list "Add to Pantry")
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const user = await db.user.findUnique({ where: { email: session.user.email } });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const body = await req.json();
+    const {
+      itemName, quantity = 1, unitLabel, categoryId,
+      expirationDate, notes, lowThreshold = 0,
+    } = body;
+
+    if (!itemName?.trim()) {
+      return NextResponse.json({ error: 'itemName is required' }, { status: 400 });
+    }
+
+    const newItem = await db.pantryItem.create({
+      data: {
+        userId: user.id,
+        itemName: itemName.trim(),
+        quantity: Number(quantity) || 1,
+        unitLabel: unitLabel || null,
+        categoryId: categoryId || null,
+        lowThreshold: Number(lowThreshold) || 0,
+        notes: notes || null,
+        expirationDate: expirationDate ? new Date(expirationDate) : null,
+      },
+    });
+
+    return NextResponse.json({
+      ...newItem,
+      quantity: Number(newItem.quantity),
+      lowThreshold: Number(newItem.lowThreshold),
+    }, { status: 201 });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Failed to create pantry item' }, { status: 500 });
+  }
+}
