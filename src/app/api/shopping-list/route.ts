@@ -87,6 +87,45 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json(updated);
 }
 
+// PUT /api/shopping-list — edit an existing manual item's details
+// Schema mapping: itemName→itemName, quantity+unitLabel→quantity (combined string),
+// notes→sourceLabel, categoryId is not stored (display-only via categories query)
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const user = await db.user.findUnique({ where: { email: session.user.email } });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const body = await req.json();
+  const { id, itemName, quantity, unitLabel, notes } = body;
+  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+
+  const item = await db.shoppingItem.findFirst({ where: { id, userId: user.id } });
+  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Build combined quantity string (e.g. "2 kg" or just "2")
+  let combinedQty: string | null = item.quantity;
+  if (quantity !== undefined || unitLabel !== undefined) {
+    const qPart = (quantity ?? "").toString().trim();
+    const uPart = (unitLabel ?? "").toString().trim();
+    combinedQty = qPart && uPart ? `${qPart} ${uPart}` : qPart || uPart || null;
+  }
+
+  const updated = await db.shoppingItem.update({
+    where: { id },
+    data: {
+      ...(itemName !== undefined && { itemName: itemName.trim() }),
+      quantity: combinedQty,
+      ...(notes !== undefined && { sourceLabel: notes ?? null }),
+    },
+  });
+
+  return NextResponse.json(updated);
+}
+
 // DELETE /api/shopping-list?id=... — delete a single item
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
