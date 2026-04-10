@@ -19,7 +19,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F0EB] text-center p-6">
       <div className="relative w-full h-150 mb-2">
         <Image
-          src="/Logo_Text_Bottom.png" // Path relative to the public folder
+          src="/Logo_Side.png" // Path relative to the public folder
           alt="ShelfControl Pantry Manager"
           fill
           className="object-contain object-center"

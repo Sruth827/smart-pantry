@@ -129,10 +129,10 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         flexShrink: 0,
       }}>
         <Image
-          src="/Logo_Text_Side.png"
+          src="/Logo_Side.png"
           alt="PantryMonium"
-          width={180}
-          height={54}
+          width={220}
+          height={60}
           style={{
             objectFit: "contain",
             objectPosition: "left center",
