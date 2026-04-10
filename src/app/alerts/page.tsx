@@ -84,7 +84,7 @@ export default function AlertsPage() {
   });
 
   if (status === "loading" || isLoading) {
-    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading alerts...</div></AppShell>;
+    return <AppShell><div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-body)" }}>Loading alerts...</div></AppShell>;
   }
 
   const allItems: any[] = [];
@@ -122,7 +122,7 @@ export default function AlertsPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: "40px 48px", maxWidth: "820px" }}>
+      <div className="alerts-container">
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Expiry Alerts</h1>
           <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
@@ -135,7 +135,7 @@ export default function AlertsPage() {
         </div>
 
         {totalTracked > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "28px" }}>
+          <div className="stat-grid-3" style={{ marginBottom: "28px" }}>
             {summaryCards.map(({ label, count, color, bgVar, borderVar }) => (
               <div key={label} style={{ background: `var(${bgVar})`, border: `1px solid var(${borderVar})`, borderRadius: "12px", padding: "14px 18px", textAlign: "center" }}>
                 <div style={{ fontSize: "28px", fontWeight: 800, color, lineHeight: 1 }}>{count}</div>
@@ -146,7 +146,7 @@ export default function AlertsPage() {
         )}
 
         {totalTracked === 0 ? (
-          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "56px 48px", textAlign: "center", border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)" }}>
+          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "40px 24px", textAlign: "center", border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)" }}>
             <div style={{ fontSize: "52px", marginBottom: "16px" }}>✅</div>
             <h2 style={{ color: "var(--foreground)", fontWeight: 700, margin: "0 0 8px" }}>No expiration dates tracked</h2>
             <p style={{ color: "var(--text-secondary)", margin: 0 }}>Add expiration dates to your pantry items to see alerts here.</p>

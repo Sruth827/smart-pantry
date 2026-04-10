@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useActionState, useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,6 +60,7 @@ useEffect(() => {
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
+          className="modal-center-wrap"
           style={{
             position: "fixed", inset: 0, zIndex: 50,
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -68,6 +69,7 @@ useEffect(() => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="modal-sheet"
             style={{
               background: "var(--card-bg)", borderRadius: "14px",
               boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
@@ -106,7 +108,7 @@ useEffect(() => {
                 </select>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+              <div className="form-grid-2">
                 <div>
                   <label style={labelCls}>Quantity</label>
                   <input name="quantity" type="number" step="0.1" defaultValue="1" style={inputCls} />

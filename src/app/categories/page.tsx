@@ -89,7 +89,7 @@ export default function CategoriesPage() {
   const cancelEdit = () => { setEditingId(null); setShowColorPicker(null); };
 
   if (status === "loading" || isLoading) {
-    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading categories...</div></AppShell>;
+    return <AppShell><div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-body)" }}>Loading categories...</div></AppShell>;
   }
 
   const inputStyle: React.CSSProperties = {
@@ -100,7 +100,7 @@ export default function CategoriesPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: "40px 48px", maxWidth: "700px" }}>
+      <div className="categories-container">
 
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Categories</h1>
@@ -111,41 +111,43 @@ export default function CategoriesPage() {
 
         {/* ── Create new ── */}
         <div style={{
-          background: "var(--card-bg)", borderRadius: "14px", padding: "24px",
+          background: "var(--card-bg)", borderRadius: "14px", padding: "20px",
           border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)", marginBottom: "24px",
         }}>
           <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--foreground)", margin: "0 0 16px" }}>
             Add New Category
           </h2>
-          <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
+          {/* Color swatch + name input stacked on mobile */}
+          <div style={{ display: "flex", gap: "10px", marginBottom: "14px", alignItems: "center" }}>
             <div style={{
               width: "42px", height: "42px", borderRadius: "10px",
               background: newColor || "var(--text-secondary)",
               border: "2px solid rgba(0,0,0,0.08)", flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
             }} />
             <input
               placeholder="e.g. Dairy, Spices, Snacks" value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && newName.trim()) createMutation.mutate({ name: newName.trim(), color: newColor }); }}
-              style={{ ...inputStyle, flex: 1 }}
+              style={{ ...inputStyle, flex: 1, minWidth: 0 }}
             />
-            <button
-              onClick={() => newName.trim() && createMutation.mutate({ name: newName.trim(), color: newColor })}
-              disabled={!newName.trim() || createMutation.isPending}
-              style={{
-                padding: "10px 20px", borderRadius: "10px", background: "var(--brand)", color: "#fff",
-                fontWeight: 600, fontSize: "14px", border: "none", cursor: "pointer",
-                opacity: !newName.trim() ? 0.5 : 1, whiteSpace: "nowrap",
-              }}
-            >{createMutation.isPending ? "Adding..." : "+ Add"}</button>
           </div>
-          <div style={{ paddingLeft: "52px" }}>
+          {/* Color picker */}
+          <div style={{ marginBottom: "14px" }}>
             <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-body)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
               Category Color
             </p>
             <ColorPicker value={newColor} onChange={setNewColor} />
           </div>
+          {/* Add button full width on mobile */}
+          <button
+            onClick={() => newName.trim() && createMutation.mutate({ name: newName.trim(), color: newColor })}
+            disabled={!newName.trim() || createMutation.isPending}
+            style={{
+              width: "100%", padding: "11px 20px", borderRadius: "10px", background: "var(--brand)", color: "#fff",
+              fontWeight: 600, fontSize: "14px", border: "none", cursor: "pointer",
+              opacity: !newName.trim() ? 0.5 : 1,
+            }}
+          >{createMutation.isPending ? "Adding..." : "+ Add Category"}</button>
           {error && <p style={{ color: "var(--alert-expired-text)", fontSize: "13px", marginTop: "10px" }}>{error}</p>}
         </div>
 
@@ -171,39 +173,46 @@ export default function CategoriesPage() {
                   background: editingId === cat.id ? "var(--edit-row-bg)" : "var(--surface-subtle)",
                   border: `1px solid ${editingId === cat.id ? "var(--edit-row-border)" : "var(--border)"}`,
                   borderBottom: editingId === cat.id ? "none" : undefined, transition: "all 0.15s",
+                  gap: "10px", flexWrap: "wrap",
                 }}>
                   {editingId === cat.id ? (
-                    <div style={{ display: "flex", gap: "8px", flex: 1, marginRight: "12px", alignItems: "center" }}>
-                      <button type="button" title="Change color"
-                        onClick={() => setShowColorPicker(showColorPicker === cat.id ? null : cat.id)}
-                        style={{
-                          width: "32px", height: "32px", borderRadius: "8px", background: editColor || "var(--text-secondary)",
-                          border: "2px solid rgba(0,0,0,0.1)", cursor: "pointer", flexShrink: 0,
-                        }}
-                      />
-                      <input
-                        value={editName} onChange={(e) => setEditName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") updateMutation.mutate({ id: cat.id, name: editName, color: editColor });
-                          if (e.key === "Escape") cancelEdit();
-                        }}
-                        autoFocus style={{ ...inputStyle, flex: 1 }}
-                      />
-                      <button onClick={() => updateMutation.mutate({ id: cat.id, name: editName, color: editColor })}
-                        style={{ padding: "8px 16px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap" }}>
-                        Save
-                      </button>
-                      <button onClick={cancelEdit}
-                        style={{ padding: "8px 14px", background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)", border: "1px solid var(--btn-cancel-border)", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
-                        Cancel
-                      </button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1, marginRight: 0 }}>
+                      {/* Name + color button row */}
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <button type="button" title="Change color"
+                          onClick={() => setShowColorPicker(showColorPicker === cat.id ? null : cat.id)}
+                          style={{
+                            width: "38px", height: "38px", borderRadius: "8px", background: editColor || "var(--text-secondary)",
+                            border: "2px solid rgba(0,0,0,0.1)", cursor: "pointer", flexShrink: 0,
+                          }}
+                        />
+                        <input
+                          value={editName} onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") updateMutation.mutate({ id: cat.id, name: editName, color: editColor });
+                            if (e.key === "Escape") cancelEdit();
+                          }}
+                          autoFocus style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                        />
+                      </div>
+                      {/* Save + Cancel row */}
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button onClick={() => updateMutation.mutate({ id: cat.id, name: editName, color: editColor })}
+                          style={{ flex: 1, padding: "9px 16px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 700 }}>
+                          Save
+                        </button>
+                        <button onClick={cancelEdit}
+                          style={{ flex: 1, padding: "9px 14px", background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-color)", border: "1px solid var(--btn-cancel-border)", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
                         <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: cat.color || "var(--text-secondary)", border: "2px solid rgba(0,0,0,0.08)", flexShrink: 0 }} />
-                        <div>
-                          <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--foreground)" }}>{cat.name}</span>
+                        <div style={{ minWidth: 0 }}>
+                          <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--foreground)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cat.name}</span>
                           {cat.color && (
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
                               <CategoryDot color={cat.color} />
@@ -212,7 +221,7 @@ export default function CategoriesPage() {
                           )}
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: "8px" }}>
+                      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                         <button onClick={() => startEdit(cat)}
                           style={{ padding: "6px 14px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", border: "1px solid var(--btn-edit-border)", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 500 }}>
                           Edit

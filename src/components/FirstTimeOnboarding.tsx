@@ -159,7 +159,7 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
         <p style={{ fontSize: "15px", color: "var(--text-body)", margin: "0 0 28px", lineHeight: 1.5 }}>
           Which system do you prefer for tracking quantities?
         </p>
-        <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "32px" }}>
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", marginBottom: "32px" }}>
           {(["Metric", "Imperial"] as const).map((u) => {
             const selected = unitPref === u;
             return (
@@ -197,7 +197,7 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
         <p style={{ fontSize: "15px", color: "var(--text-body)", margin: "0 0 28px", lineHeight: 1.5 }}>
           Pick how PantryMonium looks. You can always change this in Profile.
         </p>
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "32px" }}>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap", marginBottom: "32px" }}>
           {([
             { value: "light",    label: "Light",    icon: "☀️",  desc: "Bright & clean" },
             { value: "dark",     label: "Dark",     icon: "🌙",  desc: "Easy on the eyes" },
@@ -299,14 +299,14 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
   };
 
   return (
-    <div style={{
+    <div className="modal-center-wrap" style={{
       position: "fixed", inset: 0, zIndex: 1000,
       background: "rgba(0,0,0,0.55)",
       backdropFilter: "blur(6px)",
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: "24px",
     }}>
-      <div style={{
+      <div className="modal-sheet" style={{
         background: "var(--card-bg)",
         borderRadius: "24px",
         border: "1px solid var(--card-border)",
@@ -348,7 +348,7 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
         <div
           key={slide}
           style={{
-            padding: "28px 40px 36px",
+            padding: "28px 24px 32px",
             animation: `${direction === "forward" ? "slideInRight" : "slideInLeft"} 0.28s ease`,
           }}
         >
@@ -357,7 +357,7 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
 
         {/* Back button (not on slide 0 or final) */}
         {slide > 0 && slide < TOTAL - 1 && (
-          <div style={{ padding: "0 40px 24px" }}>
+          <div style={{ padding: "0 24px 20px" }}>
             <button onClick={prev} style={{
               background: "none", border: "none", fontSize: "13px",
               color: "var(--text-secondary)", cursor: "pointer", fontWeight: 500, padding: 0,

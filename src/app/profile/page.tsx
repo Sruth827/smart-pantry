@@ -69,7 +69,7 @@ export default function ProfilePage() {
   };
 
   if (status === "loading" || isLoading) {
-    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading profile...</div></AppShell>;
+    return <AppShell><div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-body)" }}>Loading profile...</div></AppShell>;
   }
 
   const inputStyle = {
@@ -82,7 +82,7 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div style={{ padding: "40px 48px", maxWidth: "600px" }}>
+      <div className="profile-container">
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Profile</h1>
           <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>

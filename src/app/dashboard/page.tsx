@@ -121,7 +121,7 @@ export default function DashboardPage() {
   if (status === "loading" || isLoading) {
     return (
       <AppShell>
-        <div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading your pantry...</div>
+        <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-body)" }}>Loading your pantry...</div>
       </AppShell>
     );
   }
@@ -160,7 +160,7 @@ export default function DashboardPage() {
           onComplete={() => setShowOnboarding(false)}
         />
       )}
-      <div style={{ padding: "40px 48px" }}>
+      <div className="page-content">
         <div style={{ marginBottom: "36px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>
             {greeting}, {session?.user?.name?.split(" ")[0] || "Chef"} 👋
@@ -170,13 +170,13 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+        <div className="stat-grid-3">
           <StatCard label="Total Items" value={totalItems} sub={`Across ${categoryCount} categories`} iconBgVar="--stat-icon-blue" icon="🥫" href="/pantry" />
           <StatCard label="Low in Stock" value={lowStockItems.length} sub="Need restocking" iconBgVar="--stat-icon-orange" icon="🛒" href="/shopping" />
           <StatCard label="Expiring Soon" value={expiringItems.length} sub="Within 7 days" iconBgVar="--stat-icon-red" icon="⏰" href="/alerts" />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+        <div className="grid-2-col">
           <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "24px", border: "1px solid var(--card-border)", boxShadow: "var(--card-shadow)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--foreground)", margin: 0 }}>🔔 Expiry Alerts</h2>

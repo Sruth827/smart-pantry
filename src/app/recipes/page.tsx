@@ -133,12 +133,12 @@ export default function RecipesPage() {
   };
 
   if (status === "loading" || isLoading) {
-    return <AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading...</div></AppShell>;
+    return <AppShell><div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-body)" }}>Loading...</div></AppShell>;
   }
 
   return (
     <AppShell>
-      <div style={{ padding: "40px 48px" }}>
+      <div className="page-content">
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Recipes</h1>
           <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px" }}>
@@ -365,7 +365,7 @@ export default function RecipesPage() {
         )}
 
         {searched && recipes.length === 0 && !error && !searching && (
-          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "48px", textAlign: "center", border: "1px solid var(--border)" }}>
+          <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "32px 24px", textAlign: "center", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🍽️</div>
             <h2 style={{ color: "var(--foreground)", fontWeight: 700 }}>No recipes found</h2>
             <p style={{ color: "var(--text-body)" }}>Try adding more items to your pantry.</p>
@@ -375,10 +375,12 @@ export default function RecipesPage() {
         {/* Recipe Detail Modal */}
         {selectedRecipe && (
           <div
+            className="modal-center-wrap"
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
             onClick={() => { setSelectedRecipe(null); setRecipeDetail(null); }}
           >
             <div
+              className="modal-sheet"
               style={{ background: "var(--card-bg)", borderRadius: "16px", maxWidth: "600px", width: "100%", maxHeight: "80vh", overflow: "auto" }}
               onClick={(e) => e.stopPropagation()}
             >

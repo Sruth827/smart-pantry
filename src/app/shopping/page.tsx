@@ -37,8 +37,8 @@ function QuickAddModal({
   };
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--card-bg)", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: "400px", border: "1px solid var(--card-border)", animation: "modalIn 0.18s ease", overflow: "hidden" }}>
+    <div onClick={onClose} className="modal-center-wrap" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px" }}>
+      <div onClick={(e) => e.stopPropagation()} className="modal-sheet" style={{ background: "var(--card-bg)", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: "400px", border: "1px solid var(--card-border)", animation: "modalIn 0.18s ease", overflow: "hidden" }}>
         <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-subtle)" }}>
           <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "var(--foreground)" }}>Add to Shopping List</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px" }}>✕</button>
@@ -91,8 +91,8 @@ function EditItemModal({ item, categories, onClose, onSave }: { item: any; categ
   const labelStyle: React.CSSProperties = { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-body)", marginBottom: "5px" };
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--card-bg)", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: "460px", border: "1px solid var(--card-border)", animation: "modalIn 0.18s ease", overflow: "hidden", maxHeight: "90vh", overflowY: "auto" }}>
+    <div onClick={onClose} className="modal-center-wrap" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px" }}>
+      <div onClick={(e) => e.stopPropagation()} className="modal-sheet" style={{ background: "var(--card-bg)", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: "460px", border: "1px solid var(--card-border)", animation: "modalIn 0.18s ease", overflow: "hidden", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-subtle)", position: "sticky", top: 0, zIndex: 1 }}>
           <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "var(--foreground)" }}>Edit Item</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "var(--text-secondary)", lineHeight: 1, padding: "2px 6px", borderRadius: "6px" }}>✕</button>
@@ -102,7 +102,7 @@ function EditItemModal({ item, categories, onClose, onSave }: { item: any; categ
             <label style={labelStyle}>Item Name <span style={{ color: "var(--alert-expired-text)" }}>*</span></label>
             <input value={itemName} onChange={(e) => setItemName(e.target.value)} required style={inputStyle} placeholder="e.g. Whole Milk" />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+          <div className="form-grid-2">
             <div>
               <label style={labelStyle}>Quantity</label>
               <input value={quantity} onChange={(e) => setQuantity(e.target.value)} style={inputStyle} placeholder="e.g. 2, 500g" />
@@ -163,8 +163,8 @@ function AddToPantryModal({ item, categories, onClose, onAdd }: { item: any; cat
   const labelStyle: React.CSSProperties = { display: "block", fontSize: "13px", fontWeight: 600, color: "var(--text-body)", marginBottom: "5px" };
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--card-bg)", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: "460px", border: "1px solid var(--card-border)", animation: "modalIn 0.18s ease", overflow: "hidden", maxHeight: "90vh", overflowY: "auto" }}>
+    <div onClick={onClose} className="modal-center-wrap" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(3px)", padding: "16px" }}>
+      <div onClick={(e) => e.stopPropagation()} className="modal-sheet" style={{ background: "var(--card-bg)", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: "460px", border: "1px solid var(--card-border)", animation: "modalIn 0.18s ease", overflow: "hidden", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, var(--brand) 0%, #2c7a4b 100%)", position: "sticky", top: 0, zIndex: 1 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#fff" }}>Add to Pantry</h3>
@@ -177,7 +177,7 @@ function AddToPantryModal({ item, categories, onClose, onAdd }: { item: any; cat
             <label style={labelStyle}>Item Name <span style={{ color: "var(--alert-expired-text)" }}>*</span></label>
             <input value={itemName} onChange={(e) => setItemName(e.target.value)} required style={inputStyle} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+          <div className="form-grid-2">
             <div>
               <label style={labelStyle}>Quantity</label>
               <input type="number" step="0.1" min="0" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="1" style={inputStyle} />
@@ -194,7 +194,7 @@ function AddToPantryModal({ item, categories, onClose, onAdd }: { item: any; cat
               {categories.map((cat: any) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
             </select>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+          <div className="form-grid-2">
             <div>
               <label style={labelStyle}>Expiration Date</label>
               <input type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} style={inputStyle} />
@@ -470,7 +470,7 @@ function AddToPantryTab({
           display: "flex", alignItems: "center", gap: "16px",
           padding: "12px 20px", zIndex: 60,
           animation: "toastIn 0.2s ease",
-          minWidth: "320px", maxWidth: "560px",
+          minWidth: "min(320px, calc(100vw - 32px))", maxWidth: "560px",
         }}>
           <div style={{ flex: 1 }}>
             <span style={{ color: "var(--card-bg)", fontWeight: 700, fontSize: "14px" }}>
@@ -576,7 +576,7 @@ export default function ShoppingPage() {
   }, [unchecked]);
 
   if (status === "loading" || pantryLoading || listLoading) {
-    return (<AppShell><div style={{ padding: "48px", textAlign: "center", color: "var(--text-body)" }}>Loading shopping list...</div></AppShell>);
+    return (<AppShell><div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-body)" }}>Loading shopping list...</div></AppShell>);
   }
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
@@ -626,9 +626,9 @@ export default function ShoppingPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: "40px 48px", maxWidth: "740px" }}>
+      <div className="shopping-container">
         {/* Header */}
-        <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+        <div className="page-header-row" style={{ marginBottom: "24px" }}>
           <div>
             <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--foreground)", margin: 0 }}>Shopping List</h1>
             <p style={{ color: "var(--text-body)", marginTop: "6px", fontSize: "15px", marginBottom: 0 }}>
@@ -662,7 +662,7 @@ export default function ShoppingPage() {
         {tab === "list" && (
           <>
             {allItems.length === 0 ? (
-              <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "56px 48px", textAlign: "center", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div style={{ background: "var(--card-bg)", borderRadius: "16px", padding: "40px 24px", textAlign: "center", border: "1px solid var(--border)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
                 <div style={{ fontSize: "52px", marginBottom: "16px" }}>🛒</div>
                 <h2 style={{ color: "var(--foreground)", fontWeight: 700, margin: "0 0 8px" }}>All stocked up!</h2>
                 <p style={{ color: "var(--text-secondary)", margin: "0 0 20px" }}>No items are currently below their restock threshold.</p>
