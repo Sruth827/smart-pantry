@@ -60,11 +60,11 @@ export default function LoginPage() {
           justifyContent: "center",
         }}>
           <Image
-            src="/Logo_Text_Bottom.png"
+            src="/Logo_Side.png"
             alt="PantryMonium"
-            width={140}
-            height={140}
-            style={{ objectFit: "contain", maxHeight: "120px", width: "auto" }}
+            width={260}
+            height={80}
+            style={{ objectFit: "contain", maxHeight: "70px", width: "auto" }}
             priority
           />
         </div>
