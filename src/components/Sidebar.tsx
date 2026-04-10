@@ -97,14 +97,13 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
     ? "linear-gradient(180deg, #0a0a0a 0%, #141414 60%, #1a1a1a 100%)"
     : "linear-gradient(180deg, #2D3748 0%, #3a4a60 60%, #4A6FA5 100%)";
 
-  // On desktop the sidebar is always visible; on mobile it slides in/out
   const isVisible = !isMobile || open;
 
   return (
     <aside
       style={{
         width: "240px",
-        minHeight: "100vh",
+        height: "100vh",
         background: sidebarBg,
         display: "flex",
         flexDirection: "column",
@@ -116,9 +115,10 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         boxShadow: "4px 0 24px rgba(0,0,0,0.15)",
         transform: isVisible ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 0.25s ease",
+        overflow: "hidden",
       }}
     >
-      {/* Logo + close button row */}
+      {/* ── Logo + close button ── */}
       <div style={{
         padding: "16px 12px 14px",
         borderBottom: "1px solid rgba(255,255,255,0.1)",
@@ -126,16 +126,21 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         alignItems: "center",
         justifyContent: "space-between",
         gap: "8px",
+        flexShrink: 0,
       }}>
         <Image
           src="/Logo_Text_Side.png"
           alt="PantryMonium"
           width={180}
           height={54}
-          style={{ objectFit: "contain", objectPosition: "left center", flex: 1, height: "auto" }}
+          style={{
+            objectFit: "contain",
+            objectPosition: "left center",
+            flex: 1,
+            height: "auto",
+          }}
           priority
         />
-        {/* Close button — only shown on mobile */}
         {isMobile && (
           <button
             onClick={onToggle}
@@ -158,8 +163,19 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         )}
       </div>
 
-      {/* Nav Items */}
-      <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px", overflowY: "auto" }}>
+      {/* ── Nav items ──
+          On mobile: space-evenly distributes all 7 items across available
+          height with minimal padding so nothing scrolls.
+          On desktop: normal top-aligned flow. */}
+      <nav style={{
+        flex: 1,
+        padding: isMobile ? "4px 10px" : "16px 12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        overflow: "hidden",
+        justifyContent: isMobile ? "space-evenly" : "flex-start",
+      }}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -171,14 +187,15 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "10px 14px",
+                padding: isMobile ? "6px 12px" : "10px 14px",
                 borderRadius: "10px",
                 color: isActive ? "#2D3748" : "rgba(255,255,255,0.8)",
                 background: isActive ? "#fff" : "transparent",
                 fontWeight: isActive ? 600 : 400,
-                fontSize: "14px",
+                fontSize: isMobile ? "13px" : "14px",
                 textDecoration: "none",
                 transition: "all 0.15s ease",
+                flexShrink: 0,
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
@@ -200,16 +217,31 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         })}
       </nav>
 
-      {/* User Footer */}
-      <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+      {/* ── User footer ── */}
+      <div style={{
+        padding: isMobile ? "6px 10px 8px" : "16px 12px",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        flexShrink: 0,
+      }}>
         <div style={{
-          padding: "10px 14px", borderRadius: "10px",
-          background: "rgba(255,255,255,0.08)", marginBottom: "8px",
+          padding: isMobile ? "6px 12px" : "10px 14px",
+          borderRadius: "10px",
+          background: "rgba(255,255,255,0.08)",
+          marginBottom: isMobile ? "5px" : "8px",
         }}>
-          <div style={{ color: "#fff", fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{
+            color: "#fff",
+            fontSize: isMobile ? "12px" : "13px",
+            fontWeight: 600,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
             {session?.user?.name || "User"}
           </div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "11px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{
+            color: "rgba(255,255,255,0.5)",
+            fontSize: isMobile ? "10px" : "11px",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
             {session?.user?.email}
           </div>
         </div>
@@ -217,9 +249,12 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           style={{
-            width: "100%", padding: "9px 14px", borderRadius: "10px",
+            width: "100%",
+            padding: isMobile ? "6px 14px" : "9px 14px",
+            borderRadius: "10px",
             background: "rgba(239,68,68,0.15)", color: "#fca5a5",
-            border: "1px solid rgba(239,68,68,0.25)", fontSize: "13px",
+            border: "1px solid rgba(239,68,68,0.25)",
+            fontSize: isMobile ? "12px" : "13px",
             fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.3)"; }}
