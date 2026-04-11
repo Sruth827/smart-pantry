@@ -169,11 +169,6 @@ export async function deletePantryItem(itemId: string) {
     return { success: false, error: "Unauthorized" };
   }
 
-  // 🔐 NEW ROLE CHECK
-  if (session.user.role !== "ADMIN") {
-    return { success: false, error: "Admins only" };
-  }
-
   try {
     await db.pantryItem.delete({
       where: {
