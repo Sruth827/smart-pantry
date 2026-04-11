@@ -10,7 +10,7 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, fullName: true, email: true, unitPref: true, createdAt: true },
+    select: { id: true, fullName: true, email: true, unitPref: true, createdAt: true, hasLoggedInBefore: true },
   });
   return NextResponse.json(user);
 }

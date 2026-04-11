@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppShell from "@/components/AppShell";
 import FirstTimeOnboarding from "@/components/FirstTimeOnboarding";
 import Link from "next/link";
@@ -101,16 +101,31 @@ function LowStockItem({ item }: { item: any }) {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession({ required: true });
+  const { data: session, status, update: updateSession } = useSession({ required: true });
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
-  // Once session is ready, decide whether to show onboarding.
-  // We use a local state so dismissing the modal doesn't require a session reload.
-  const resolvedOnboarding = (() => {
-    if (showOnboarding !== null) return showOnboarding;
-    if (status === "authenticated") return session?.user?.isFirstLogin ?? false;
-    return false;
-  })();
+  // Verify first-login status directly from the DB rather than trusting the
+  // JWT alone. The JWT value can be stale after hot-reloads or token refreshes
+  // (e.g. after a code push in dev). The DB is always the source of truth.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((profile) => {
+        // Show onboarding only if the DB confirms they haven't been through it
+        setShowOnboarding(!profile.hasLoggedInBefore);
+      })
+      .catch(() => {
+        // Fallback to JWT value if the fetch fails
+        setShowOnboarding(session?.user?.isFirstLogin ?? false);
+      });
+  }, [status]);
+
+  const handleOnboardingComplete = async () => {
+    setShowOnboarding(false);
+    // Refresh the session token so isFirstLogin is up-to-date everywhere
+    await updateSession();
+  };
 
   const { data: pantryData, isLoading } = useQuery({
     queryKey: ["pantry", session?.user?.email],
@@ -154,10 +169,10 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      {resolvedOnboarding && (
+      {showOnboarding && (
         <FirstTimeOnboarding
           userName={session?.user?.name || "there"}
-          onComplete={() => setShowOnboarding(false)}
+          onComplete={handleOnboardingComplete}
         />
       )}
       <div className="page-content">

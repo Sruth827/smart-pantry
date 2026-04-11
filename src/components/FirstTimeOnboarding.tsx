@@ -110,12 +110,17 @@ export default function FirstTimeOnboarding({ userName, onComplete }: Props) {
   const finish = async () => {
     setSaving(true);
     try {
-      // Save unit preference
-      await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ unitPref }),
-      });
+      // Save unit preference and mark onboarding complete in parallel.
+      // The onboarding-complete call writes hasLoggedInBefore = true to the DB
+      // so the modal won't reappear on future logins or after hot-reloads.
+      await Promise.all([
+        fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ unitPref }),
+        }),
+        fetch("/api/onboarding-complete", { method: "POST" }),
+      ]);
     } catch { /* best-effort */ }
     setSaving(false);
     onComplete();
