@@ -13,7 +13,6 @@ type ScannedItem = {
   unitLabel: string;
   expirationDate: string;
   notes: string;
-  spoonacularId?: number;
 };
 
 type ScannerMode = "scanning" | "review";
@@ -100,7 +99,7 @@ export default function Scanner({ categories }: { categories: any[] }) {
                 unitLabel: "pcs",
                 expirationDate: defaultExpDate,
                 notes: "",
-                spoonacularId: result.item.spoonacularId,
+
               };
               setScannedItems((prev) => {
                 // Guard against race: double-check it wasn't added while awaiting
