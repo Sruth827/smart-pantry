@@ -216,3 +216,49 @@ export async function adjustQuantity(itemId: string, amount: number) {
     return { success: false, error: "Update failed" };
   }
 }
+
+
+export async function bulkAddScannedItems(
+  items: Array<{
+    itemName: string;
+    upc: string;
+    quantity: number;
+    categoryId: string;
+    unitLabel: string;
+    expirationDate?: string;
+    notes?: string;
+    spoonacularId?: number;
+  }>
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+  try {
+    const results = await Promise.all(
+      items.map(async (item) => {
+        const newItem = await db.pantryItem.create({
+          data: {
+            itemName: item.itemName,
+            spoonacularId: item.spoonacularId,
+            quantity: item.quantity,
+            unitLabel: item.unitLabel || "pcs",
+            expirationDate: item.expirationDate
+              ? new Date(item.expirationDate)
+              : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            notes: item.notes || null,
+            user: { connect: { id: session.user.id } },
+            ...(item.categoryId && { category: { connect: { id: item.categoryId } } }),
+          },
+        });
+        return newItem;
+      })
+    );
+
+    revalidatePath("/dashboard");
+    revalidatePath("/pantry");
+    return { success: true, count: results.length };
+  } catch (error) {
+    console.error("Bulk Add Error:", error);
+    return { success: false, error: "Failed to add items." };
+  }
+}
