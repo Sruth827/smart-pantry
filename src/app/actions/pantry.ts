@@ -99,45 +99,93 @@ export async function createPantryItem(prevState: any, formData: FormData) {
 }
 
 
-export async function processScannedBarcode(upc: string, categoryId? : string){
+async function lookupUPC(upc: string): Promise<{ itemName: string; source: string } | null> {
+  // ── 1. Open Food Facts (free, 4M+ products, no key needed) ──────────────────
+  try {
+    const offRes = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${upc}.json?fields=product_name,brands,generic_name`,
+      { headers: { "User-Agent": "SmartPantry/1.0" }, next: { revalidate: 0 } }
+    );
+    if (offRes.ok) {
+      const offData = await offRes.json();
+      if (offData.status === 1 && offData.product) {
+        const name =
+          offData.product.product_name ||
+          offData.product.generic_name ||
+          "";
+        const brand = offData.product.brands?.split(",")[0]?.trim() || "";
+        const fullName = brand && !name.toLowerCase().includes(brand.toLowerCase())
+          ? `${brand} ${name}`.trim()
+          : name.trim();
+        if (fullName) {
+          console.log(`[Barcode] OFF hit: "${fullName}"`);
+          return { itemName: fullName, source: "openfoodfacts" };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[Barcode] OFF lookup failed:", err);
+  }
+
+  // ── 2. Spoonacular fallback ──────────────────────────────────────────────────
+  const API_KEY = process.env.SPOONACULAR_API_KEY;
+  if (API_KEY) {
+    try {
+      const spoonRes = await fetch(
+        `https://api.spoonacular.com/food/products/upc/${upc}?apiKey=${API_KEY}`,
+        { next: { revalidate: 0 } }
+      );
+      if (spoonRes.ok) {
+        const spoonData = await spoonRes.json();
+        const name = spoonData.title?.trim();
+        if (name) {
+          console.log(`[Barcode] Spoonacular hit: "${name}"`);
+          return { itemName: name, source: "spoonacular" };
+        }
+      }
+    } catch (err) {
+      console.warn("[Barcode] Spoonacular lookup failed:", err);
+    }
+  }
+
+  console.warn(`[Barcode] No match found for UPC: ${upc}`);
+  return null;
+}
+
+export async function processScannedBarcode(upc: string, categoryId?: string) {
   console.log("Server Action: Processing UPC", upc);
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id; 
-  // 2. Security Check: If no session, reject the request
+
   if (!session || !session.user) {
     console.log("Auth Error: No session user ID found");
     return { success: false, error: "You must be logged in to add items." };
   }
 
-  const API_KEY = process.env.SPOONACULAR_API_KEY;
-
   try {
-    const response = await fetch(
-      `https://api.spoonacular.com/food/products/upc/${upc}?apiKey=${API_KEY}`
-    );
+    const result = await lookupUPC(upc);
 
-    console.log("Spoonacular Response Status:", response.status);
-    if (!response.ok) throw new Error("Product not found");
-    const data = await response.json();
-    console.log("Data received:", data.title);
-    const { title, ingredientId } = data;
+    if (!result) {
+      return { success: false, error: "Product not found in any database." };
+    }
 
+    const { itemName } = result;
+
+    // Return item data without saving (scanner collects items before bulk-add)
     if (!categoryId) {
       return {
         success: true,
-        item: { itemName: title, spoonacularId: ingredientId }
+        item: { itemName, upc }
       };
     }
 
-    // Save to Prisma Database
+    // Direct save path (legacy single-item flow)
     const newItem = await db.pantryItem.create({
       data: {
-        itemName: title,
-        spoonacularId: ingredientId, 
+        itemName,
         quantity: 1,
         expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        user: { connect: { email: session.user.email as string} },
-        category: { connect: { id: categoryId } }
+        user: { connect: { email: session.user.email as string } },
+        category: { connect: { id: categoryId } },
       },
     });
 
@@ -145,18 +193,17 @@ export async function processScannedBarcode(upc: string, categoryId? : string){
     revalidatePath("/dashboard");
     revalidatePath("/pantry");
 
-    return { 
+    return {
       success: true,
       item: {
         ...newItem,
         quantity: Number(newItem.quantity),
         lowThreshold: Number(newItem.lowThreshold),
-      }
-      };
+      },
+    };
   } catch (error) {
-    console.error("Prisma/Fetch Error:", error);
-    return { success: false, error: "Could not find or save item." };    
-
+    console.error("Barcode lookup/save error:", error);
+    return { success: false, error: "Could not find or save item." };
   }
 }
 
