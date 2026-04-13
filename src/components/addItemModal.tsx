@@ -14,11 +14,23 @@ interface Category {
 export default function AddItemForm({
   categories,
   unitSystem = "Metric",
+  externalOpen,
+  onExternalClose,
 }: {
   categories: Category[];
   unitSystem?: "Imperial" | "Metric";
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = (val: boolean) => {
+    if (externalOpen !== undefined) {
+      if (!val) onExternalClose?.();
+    } else {
+      setInternalOpen(val);
+    }
+  };
   const [state, formAction, isPending] = useActionState(createPantryItem, null);
   const [unitLabel, setUnitLabel] = useState("");
   const queryClient = useQueryClient();
@@ -47,15 +59,17 @@ useEffect(() => {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        style={{
-          padding: "10px 18px", borderRadius: "10px", background: "var(--brand)",
-          color: "#fff", fontWeight: 600, fontSize: "14px", border: "none", cursor: "pointer",
-        }}
-      >
-        + Add Item Manually
-      </button>
+      {externalOpen === undefined && (
+        <button
+          onClick={() => setIsOpen(true)}
+          style={{
+            padding: "10px 18px", borderRadius: "10px", background: "var(--brand)",
+            color: "#fff", fontWeight: 600, fontSize: "14px", border: "none", cursor: "pointer",
+          }}
+        >
+          + Add Item Manually
+        </button>
+      )}
 
       {isOpen && (
         <div
