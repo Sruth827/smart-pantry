@@ -806,6 +806,7 @@ export default function PantryPage() {
   const [editingItem, setEditingItem]     = useState<any>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showBulkAdd, setShowBulkAdd]     = useState(false);
+  const [showAddItem, setShowAddItem]     = useState(false);
   const [bulkToast, setBulkToast]         = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -905,23 +906,49 @@ export default function PantryPage() {
               {totalGrouped > 0 && <span style={{ color: "var(--text-secondary)", marginLeft: "8px" }}>· {totalGrouped} grouped</span>}
             </p>
           </div>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {!isMobile && (
-              <>
-                <Link href="/scan" style={{ padding: "9px 14px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid var(--btn-edit-border)", whiteSpace: "nowrap" }}>📷 Scan</Link>
-                <button onClick={() => setShowBulkAdd(true)} style={{ padding: "9px 14px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", border: "1px solid var(--btn-edit-border)", cursor: "pointer", whiteSpace: "nowrap" }}>↓ Bulk Add</button>
-              </>
-            )}
-            <AddItemForm categories={categories || []} unitSystem={unitSystem} />
-          </div>
+          {!isMobile && (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <Link href="/scan" style={{ padding: "9px 14px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", textDecoration: "none", border: "1px solid var(--btn-edit-border)", whiteSpace: "nowrap" }}>📷 Scan</Link>
+              <button onClick={() => setShowBulkAdd(true)} style={{ padding: "9px 14px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "14px", border: "1px solid var(--btn-edit-border)", cursor: "pointer", whiteSpace: "nowrap" }}>↓ Bulk Add</button>
+              <AddItemForm categories={categories || []} unitSystem={unitSystem} />
+            </div>
+          )}
         </div>
 
-        {/* Mobile secondary actions */}
+        {/* Mobile action bar — unified 3-button row */}
         {isMobile && (
-          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-            <Link href="/scan" style={{ flex: 1, textAlign: "center", padding: "9px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "13px", textDecoration: "none", border: "1px solid var(--btn-edit-border)" }}>📷 Scan</Link>
-            <button onClick={() => setShowBulkAdd(true)} style={{ flex: 1, padding: "9px", borderRadius: "10px", background: "var(--btn-edit-bg)", color: "var(--btn-edit-color)", fontWeight: 600, fontSize: "13px", border: "1px solid var(--btn-edit-border)", cursor: "pointer" }}>↓ Bulk Add</button>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+            <button
+              onClick={() => setShowAddItem(true)}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", padding: "10px 6px", borderRadius: "12px", background: "var(--brand)", color: "#fff", fontWeight: 600, fontSize: "12px", border: "none", cursor: "pointer", lineHeight: 1.2 }}
+            >
+              <span style={{ fontSize: "18px" }}>＋</span>
+              Add Item
+            </button>
+            <Link
+              href="/scan"
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", padding: "10px 6px", borderRadius: "12px", background: "var(--brand)", color: "#fff", fontWeight: 600, fontSize: "12px", textDecoration: "none", lineHeight: 1.2 }}
+            >
+              <span style={{ fontSize: "18px" }}>📷</span>
+              Scan
+            </Link>
+            <button
+              onClick={() => setShowBulkAdd(true)}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", padding: "10px 6px", borderRadius: "12px", background: "var(--brand)", color: "#fff", fontWeight: 600, fontSize: "12px", border: "none", cursor: "pointer", lineHeight: 1.2 }}
+            >
+              <span style={{ fontSize: "18px" }}>↓</span>
+              Bulk Add
+            </button>
           </div>
+        )}
+        {/* AddItemForm driven externally on mobile */}
+        {isMobile && (
+          <AddItemForm
+            categories={categories || []}
+            unitSystem={unitSystem}
+            externalOpen={showAddItem}
+            onExternalClose={() => setShowAddItem(false)}
+          />
         )}
 
         {/* Filters */}
