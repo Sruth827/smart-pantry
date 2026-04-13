@@ -274,7 +274,6 @@ export async function bulkAddScannedItems(
     unitLabel: string;
     expirationDate?: string;
     notes?: string;
-    spoonacularId?: number;
   }>
 ) {
   const session = await getServerSession(authOptions);
@@ -286,7 +285,6 @@ export async function bulkAddScannedItems(
         const newItem = await db.pantryItem.create({
           data: {
             itemName: item.itemName,
-            spoonacularId: item.spoonacularId,
             quantity: item.quantity,
             unitLabel: item.unitLabel || "pcs",
             expirationDate: item.expirationDate
