@@ -86,9 +86,10 @@ interface SidebarProps {
   isMobile: boolean;
   onToggle: () => void;
   onNavClick: () => void;
+  onHelp: () => void;
 }
 
-export default function Sidebar({ open, isMobile, onToggle, onNavClick }: SidebarProps) {
+export default function Sidebar({ open, isMobile, onToggle, onNavClick, onHelp }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { theme } = useTheme();
@@ -245,6 +246,30 @@ export default function Sidebar({ open, isMobile, onToggle, onNavClick }: Sideba
             {session?.user?.email}
           </div>
         </div>
+
+        <button
+          onClick={onHelp}
+          style={{
+            width: "100%",
+            padding: isMobile ? "6px 14px" : "9px 14px",
+            borderRadius: "10px",
+            background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            fontSize: isMobile ? "12px" : "13px",
+            fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            marginBottom: isMobile ? "5px" : "8px",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          Help
+        </button>
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}

@@ -44,6 +44,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setShowOnboarding(false);
   };
 
+  const handleHelp = () => {
+    setUserName(session?.user?.name || session?.user?.email || "there");
+    setShowOnboarding(true);
+  };
+
   const closeSidebar = () => { if (isMobile) setOpen(false); };
 
   return (
@@ -66,6 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         isMobile={isMobile}
         onToggle={() => setOpen((o) => !o)}
         onNavClick={closeSidebar}
+        onHelp={handleHelp}
       />
 
       <main style={{
