@@ -78,3 +78,15 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    await db.user.delete({ where: { id: session.user.id } });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
+  }
+}

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import AppShell from "@/components/AppShell";
 import { useTheme } from "@/components/ThemeContext";
 import type { Theme } from "@/components/ThemeContext";
+import { signOut } from "next-auth/react";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession({ required: true });
@@ -18,6 +19,9 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", session?.user?.id],
@@ -56,8 +60,27 @@ export default function ProfilePage() {
     updateMutation.mutate({ fullName, unitPref });
   };
 
-  const handlePasswordSave = () => {
-    if (newPassword !== confirmPassword) {
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/profile", { method: "DELETE" });
+      const data = await res.json();
+      if (data.error) {
+        setMessage({ type: "error", text: data.error });
+        setShowDeleteModal(false);
+        setIsDeleting(false);
+      } else {
+        await signOut({ callbackUrl: "/" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Failed to delete account. Please try again." });
+      setShowDeleteModal(false);
+      setIsDeleting(false);
+    }
+  };
+
+  const handlePasswordSave = () => {    if (newPassword !== confirmPassword) {
       setMessage({ type: "error", text: "New passwords do not match." });
       return;
     }
@@ -293,6 +316,90 @@ export default function ProfilePage() {
             Member since {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}
           </p>
         </div>
+
+        {/* Danger Zone */}
+        <div style={{ background: "var(--card-bg)", borderRadius: "14px", padding: "28px", border: "1px solid var(--alert-expired-border)", marginTop: "20px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--alert-expired-text)", margin: "0 0 8px" }}>⚠️ Danger Zone</h2>
+          <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "0 0 20px", lineHeight: 1.5 }}>
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          <button
+            onClick={() => { setShowDeleteModal(true); setDeleteConfirmText(""); }}
+            style={{
+              padding: "11px 20px", borderRadius: "10px",
+              background: "var(--alert-expired-bg)", color: "var(--alert-expired-text)",
+              fontWeight: 700, fontSize: "14px",
+              border: "1px solid var(--alert-expired-border)", cursor: "pointer",
+            }}
+          >
+            🗑️ Delete My Account
+          </button>
+        </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: "16px",
+          }}>
+            <div style={{
+              background: "var(--card-bg)", borderRadius: "16px", padding: "32px",
+              maxWidth: "440px", width: "100%", boxShadow: "0 8px 40px rgba(0,0,0,0.22)",
+              border: "1px solid var(--alert-expired-border)",
+            }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--alert-expired-text)", margin: "0 0 12px" }}>
+                Delete Account
+              </h2>
+              <p style={{ fontSize: "14px", color: "var(--text-body)", margin: "0 0 8px", lineHeight: 1.6 }}>
+                This will permanently delete your account, pantry, categories, and shopping list. <strong>There is no going back.</strong>
+              </p>
+              <p style={{ fontSize: "14px", color: "var(--text-body)", margin: "0 0 20px" }}>
+                Type <strong>DELETE</strong> below to confirm:
+              </p>
+              <input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                style={{
+                  width: "100%", padding: "10px 14px", border: "1px solid var(--alert-expired-border)",
+                  borderRadius: "10px", fontSize: "14px", color: "var(--foreground)",
+                  background: "var(--surface-subtle)", outline: "none",
+                  boxSizing: "border-box" as const, marginBottom: "20px",
+                }}
+                autoFocus
+              />
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isDeleting}
+                  style={{
+                    flex: 1, padding: "11px", borderRadius: "10px",
+                    background: "var(--surface-subtle)", color: "var(--foreground)",
+                    fontWeight: 600, fontSize: "14px",
+                    border: "1px solid var(--border)", cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                  style={{
+                    flex: 1, padding: "11px", borderRadius: "10px",
+                    background: deleteConfirmText === "DELETE" ? "var(--alert-expired-text)" : "var(--surface-subtle)",
+                    color: deleteConfirmText === "DELETE" ? "#fff" : "var(--text-secondary)",
+                    fontWeight: 700, fontSize: "14px", border: "none",
+                    cursor: deleteConfirmText === "DELETE" ? "pointer" : "not-allowed",
+                    opacity: isDeleting ? 0.6 : 1, transition: "all 0.15s",
+                  }}
+                >
+                  {isDeleting ? "Deleting..." : "Delete Account"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );
