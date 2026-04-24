@@ -135,6 +135,22 @@ useEffect(() => {
               </div>
 
               <div style={{ marginBottom: "14px" }}>
+                <label style={labelCls}>
+                  Low Stock Threshold{" "}
+                  <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>(optional)</span>
+                </label>
+                <input
+                  name="lowThreshold"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  defaultValue=""
+                  placeholder="e.g. 2 — alert when quantity falls to this"
+                  style={inputCls}
+                />
+              </div>
+
+              <div style={{ marginBottom: "14px" }}>
                 <label style={labelCls}>Expiration Date</label>
                 <input type="date" name="expirationDate" style={inputCls} />
               </div>

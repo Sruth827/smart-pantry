@@ -26,6 +26,7 @@ export async function createPantryItem(prevState: any, formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const expirationDate = formData.get("expirationDate") as string;
   const notes = (formData.get("notes") as string) || null;
+  const formThreshold = parseFloat(formData.get("lowThreshold") as string) || 0;
 
   try {
     // ── Threshold migration: check for existing siblings BEFORE creating ──────
@@ -41,7 +42,7 @@ export async function createPantryItem(prevState: any, formData: FormData) {
     // - If there is exactly 1 sibling, it may have a threshold set → this becomes the group threshold
     // - If there are already 2+ siblings, all should share the same threshold → use theirs
     // - If there are no siblings, no threshold migration needed
-    let inheritedThreshold = 0;
+    let inheritedThreshold = formThreshold;
     if (siblings.length === 1) {
       // Going from 1 → 2: promote the singleton's threshold to become the group threshold
       const singletonThreshold = Number(siblings[0].lowThreshold);
